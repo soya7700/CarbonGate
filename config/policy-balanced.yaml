@@ -1,0 +1,7 @@
+version: 1
+profile: balanced
+workspace: .
+auditLog: .carbongate/audit.jsonl
+
+# The MVP ships named profiles. Fine-grained signed policy rules will build on
+# the same Action contract in the next milestone.
