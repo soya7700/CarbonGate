@@ -4,38 +4,57 @@
 
 [English](README.md)
 
-> **MVP 安全边界**
-> CarbonGate 只能管控经过其 CLI、HTTP 网关、Java API 或 MCP 代理的命令与
-> 工具调用。`carbon run` 只负责注入集成信息，不是操作系统沙箱。对不可信
-> 工作负载仍应使用 Docker、容器或操作系统级沙箱。
+CarbonGate 在命令或工具调用执行前进行评估，应用工作区和网络外发策略，
+自动脱敏敏感信息，并为风险操作提供明确的人工授权流程。
 
-## 项目简介
+## 选择接入方式
 
-CarbonGate 在 Agent 执行操作之前进行安全判断，并提供以下能力：
+| 使用目标 | 从这里开始 |
+|---|---|
+| 保护开发电脑上的命令 | [安装 CLI](#1-安装-cli) |
+| 保护 Codex、OpenClaw 或其他 MCP 宿主 | [Agent 与 MCP 接入](#2-接入-codexopenclaw-或-mcp-宿主) |
+| 集成到 Java 21 业务应用 | [Java 项目集成](#3-集成-java-21-项目) |
+| 启用企业详细审计 | [企业详细审计](#企业详细审计) |
 
-- Shell 命令静态风险分析，返回 `allow`、`ask` 或 `deny`
-- 文件路径边界检查，包括路径穿越与符号链接逃逸检测
+## 核心能力
+
+- Shell 命令风险分析，返回 `allow`、`ask` 或 `deny`
+- 配置工作区内的文件路径穿越和符号链接逃逸检测
 - 网络外发风险分析与敏感信息泄漏检测
-- 密码、Token、API Key 等敏感内容扫描和稳定脱敏
-- MCP stdio 代理、HTTP 本地网关和无第三方依赖的 Java 21 API
-- 警告、每次授权、完全拦截和平衡模式的自然语言切换
-- 一次性人工授权队列以及拦截记录查询
-- 本地 Agent 精简日志和企业 Java 应用详细审计两种策略
+- 密码、Token、API Key 和隐私内容脱敏
+- CLI、MCP stdio 代理、本地 HTTP 网关和 Java 21 API
+- 平衡、仅警告、每次授权和完全拦截四种执行模式
+- 一次性授权、拦截记录查询和可配置规则开关
+- 本地 Agent 精简日志与企业详细审计模式
 
-当前版本为早期 MVP。透明系统调用拦截、真正的挂载命名空间或 Chroot
-虚拟文件系统不在当前版本能力范围内。
+> [!IMPORTANT]
+> CarbonGate 只能管控经过其 CLI、HTTP 网关、Java API 或 MCP 代理的操作。
+> `carbon run` 是集成启动器，不是操作系统沙箱。对不可信工作负载仍应使用
+> Docker、容器或操作系统级沙箱。
+
+CarbonGate 当前处于早期 MVP 阶段。透明系统调用拦截、真正的挂载命名空间
+或 Chroot 文件系统虚拟化尚未实现。
 
 ## 环境要求
 
-- JDK 21 或更高版本
-- macOS、Linux，或可以运行 JDK 21 与 Shell 脚本的环境
+- JDK 21 或更高版本，需要可以使用 `java`、`javac` 和 `jar`
 - 从源码安装时需要 Git
+- macOS、Linux，或 Windows PowerShell 5.1 及以上版本
 
-CarbonGate 核心和发布包目前没有第三方源码或运行时依赖。
+CarbonGate 运行时没有第三方源码或运行时依赖。
 
-## CLI 安装
+## 1. 安装 CLI
 
-### 从源码安装到当前用户
+### macOS
+
+安装前确认 JDK 21：
+
+```bash
+java -version
+javac -version
+```
+
+克隆项目并安装到当前用户：
 
 ```bash
 git clone https://github.com/soya7700/CarbonGate.git
@@ -43,46 +62,90 @@ cd CarbonGate
 ./scripts/install.sh
 ```
 
-默认安装位置：
-
-- 命令：`~/.local/bin/carbon`
-- JAR：`~/.local/lib/carbongate/carbongate.jar`
-- 配置和运行状态：`~/.carbongate/`
-
-如果 `~/.local/bin` 不在 `PATH` 中：
+默认命令位置是 `~/.local/bin/carbon`。如果当前终端找不到命令：
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
+carbon version
 ```
 
-可以指定安装目录：
+要让 PATH 长期生效，可以把 `export` 加入 `~/.zshrc` 或当前 Shell 的配置文件。
+
+### Linux
+
+通过系统包管理器或企业指定的 JDK 供应商安装 JDK 21，然后确认版本：
+
+```bash
+java -version
+javac -version
+```
+
+克隆并安装：
+
+```bash
+git clone https://github.com/soya7700/CarbonGate.git
+cd CarbonGate
+./scripts/install.sh
+export PATH="$HOME/.local/bin:$PATH"
+carbon version
+```
+
+可以把 `export` 加入 `~/.profile`、`~/.bashrc` 或当前 Shell 配置文件。
+
+macOS 和 Linux 可以指定其他安装目录：
 
 ```bash
 ./scripts/install.sh --prefix /opt/carbongate
 ```
 
-安装脚本会使用 `javac --release 21` 构建 JAR，并在配置不存在时创建
-`$CARBON_HOME/carbon.conf`，不会覆盖已有配置。
+### Windows
 
-### 直接从源码目录运行
+打开 PowerShell 并确认 JDK 21：
 
-```bash
-./scripts/build.sh
-./build/carbon version
-./build/carbon status
+```powershell
+java -version
+javac -version
 ```
 
-### 从打包文件运行
+克隆项目并运行 Windows 安装脚本：
 
-收到或手动生成发布包后，可以直接解压运行：
-
-```bash
-./scripts/package.sh 0.2.0
-tar -xzf build/carbongate-0.2.0.tar.gz
-./build/carbongate-0.2.0/bin/carbon version
+```powershell
+git clone https://github.com/soya7700/CarbonGate.git
+Set-Location CarbonGate
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-项目不会自动创建 GitHub Release；Release 只在维护者明确要求时手动发布。
+默认命令位置：
+
+```text
+%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd
+```
+
+在当前 PowerShell 会话立即使用：
+
+```powershell
+$env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
+carbon version
+```
+
+要让新终端也可以使用，请在 Windows“环境变量”的用户 `Path` 中加入
+`%LOCALAPPDATA%\CarbonGate\bin`。也可以指定安装目录：
+
+```powershell
+.\scripts\install.ps1 -Prefix "C:\Tools\CarbonGate"
+```
+
+PowerShell 安装脚本使用本机 JDK 编译，生成 `carbon.cmd`，不会下载额外依赖。
+
+### 安装目录
+
+| 内容 | macOS/Linux 默认位置 | Windows 默认位置 |
+|---|---|---|
+| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd` |
+| JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
+| 配置与状态 | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
+
+所有平台都可以通过 `CARBON_HOME` 修改配置和状态目录。
 
 ### 安装后检查
 
@@ -93,81 +156,17 @@ carbon status
 carbon rules
 ```
 
-## CLI 使用
+安装程序只会在配置不存在时初始化，不会覆盖已有的 `carbon.conf`。
 
-检查命令但不执行：
+## 2. 接入 Codex、OpenClaw 或 MCP 宿主
 
-```bash
-carbon check --workspace /path/to/project -- 'git status'
-carbon check --workspace /path/to/project -- 'rm -rf /'
-```
-
-检查后执行；遇到 `ask` 时需要人工确认或一次性授权：
-
-```bash
-carbon exec --workspace /path/to/project -- 'touch result.txt'
-```
-
-启动仅监听回环地址的 HTTP 网关：
-
-```bash
-carbon gateway --port 8765 --workspace /path/to/project
-curl -s http://127.0.0.1:8765/v1/health
-```
-
-调用评估接口：
-
-```bash
-curl -s http://127.0.0.1:8765/v1/evaluate \
-  -H 'content-type: application/json' \
-  -d '{"capability":"shell","operation":"execute","resource":"rm -rf /"}'
-```
-
-查询和控制：
-
-```bash
-carbon status
-carbon rules
-carbon blocked --limit 20
-carbon approvals list
-carbon approvals approve <id>
-carbon approvals deny <id>
-carbon config show
-carbon config path
-```
-
-自然语言切换控制级别：
-
-```bash
-carbon control "切换到警告提醒"
-carbon control "以后每次都要手动授权"
-carbon control "完全拦截所有操作"
-carbon control "恢复默认平衡模式"
-```
-
-完整命令列表：
+CarbonGate 通过代理包装已有的 stdio MCP Server。把原服务命令放在 `--` 后：
 
 ```text
-carbon status
-carbon rules
-carbon config init|show|path|set <key> <value>
-carbon blocked [--limit 20]
-carbon approvals list|approve <id>|deny <id>
-carbon mode show|set <自然语言级别>
-carbon control "自然语言级别指令"
-carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
-carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
-carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
-carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
-carbon redact TEXT
-carbon run [--workspace PATH] -- AGENT [ARGS...]
-carbon version
+carbon mcp proxy --workspace /absolute/project/path -- ORIGINAL_SERVER [ARGS...]
 ```
 
-## MCP、Codex 与 OpenClaw 接入
-
-将原 MCP Server 命令放到 `carbon mcp proxy` 的 `--` 后面。通用 stdio MCP
-配置示例：
+macOS 或 Linux 通用 MCP 配置：
 
 ```json
 {
@@ -188,38 +187,67 @@ carbon version
 }
 ```
 
-在 Codex、OpenClaw 或其他支持 stdio MCP 的 Agent 中，把原 MCP Server
-配置替换为上述代理形式即可。CarbonGate 会在转发 `tools/call` 前判断风险。
-告警会出现在宿主捕获的 `stderr` 或工具响应中；需要授权时可运行：
+Windows 使用 `carbon.cmd` 和 Windows 路径：
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "C:\\Users\\YOU\\AppData\\Local\\CarbonGate\\bin\\carbon.cmd",
+      "args": [
+        "mcp",
+        "proxy",
+        "--workspace",
+        "C:\\work\\project",
+        "--",
+        "npx.cmd",
+        "some-mcp-server"
+      ]
+    }
+  }
+}
+```
+
+在 Codex、OpenClaw 或其他支持 stdio MCP 的宿主中，用上述代理配置替换原
+MCP Server 配置。CarbonGate 会在转发 `tools/call` 前完成安全判断。
+
+告警会出现在宿主捕获的 `stderr` 或工具响应中。需要人工授权时运行：
 
 ```bash
 carbon approvals list
 carbon approvals approve <id>
 ```
 
-Agent 必须重新发起完全相同的操作，授权只消费一次，24 小时后自动过期。
+Agent 必须重新发起完全相同的操作。授权只使用一次，24 小时后自动过期。
+拒绝待授权请求：
 
-也可以使用集成启动器为兼容 Agent 注入 `CARBON_ENDPOINT`、
-`CARBON_WORKSPACE`、`CARBON_PROFILE` 和 `CARBON_MODE`：
+```bash
+carbon approvals deny <id>
+```
+
+兼容的 Agent 也可以通过以下方式获得 CarbonGate 连接信息：
 
 ```bash
 carbon run --workspace /path/to/project -- your-agent-command
 ```
 
-`carbon run` 本身不能阻止子进程绕开 CarbonGate 直接访问系统。
+该命令会注入 `CARBON_ENDPOINT`、`CARBON_WORKSPACE`、`CARBON_PROFILE` 和
+`CARBON_MODE`，但不能阻止子进程绕过 CarbonGate 直接访问系统。
 
-## Java 21 项目引入
+## 3. 集成 Java 21 项目
 
-CarbonGate 当前还没有发布到 Maven Central。可以先构建 JAR：
+CarbonGate 当前尚未发布到公共 Maven 仓库，需要先从源码构建 JAR：
 
 ```bash
 ./scripts/build.sh
-# 生成 build/carbongate.jar
+# build/carbongate.jar
 ```
 
-### Gradle 项目
+Windows 运行 `scripts\install.ps1` 后也会生成 `build\carbongate.jar`。
 
-将 JAR 复制到业务项目的 `libs/` 目录：
+### Gradle
+
+把 JAR 复制到业务项目的 `libs/` 目录：
 
 ```kotlin
 dependencies {
@@ -227,7 +255,7 @@ dependencies {
 }
 ```
 
-### Maven 项目
+### Maven
 
 先安装到本机 Maven 仓库：
 
@@ -240,7 +268,7 @@ mvn install:install-file \
   -Dpackaging=jar
 ```
 
-然后在 `pom.xml` 中加入：
+添加依赖：
 
 ```xml
 <dependency>
@@ -250,16 +278,16 @@ mvn install:install-file \
 </dependency>
 ```
 
-### 推荐：Sidecar/独立网关模式
+### 推荐：Sidecar 独立网关
 
 独立启动 CarbonGate：
 
 ```bash
 CARBON_HOME=/var/lib/carbongate \
-  carbon gateway --profile strict --port 8765 --workspace /srv/application/workspace
+  carbon gateway --profile strict --port 8765 --workspace /srv/app/workspace
 ```
 
-Java 应用通过 SDK 调用：
+Java 应用调用网关：
 
 ```java
 import io.carbongate.model.Action;
@@ -270,7 +298,7 @@ import java.net.URI;
 import java.nio.file.Path;
 
 try (var client = new CarbonGateClient(URI.create("http://127.0.0.1:8765"))) {
-    var result = client.evaluate(Action.shell("git status", Path.of("/srv/application/workspace")));
+    var result = client.evaluate(Action.shell("git status", Path.of("/srv/app/workspace")));
     if (result.decision() != Decision.ALLOW) {
         throw new SecurityException(result.reason());
     }
@@ -278,10 +306,9 @@ try (var client = new CarbonGateClient(URI.create("http://127.0.0.1:8765"))) {
 }
 ```
 
-Sidecar 模式便于独立升级策略和审计逻辑。当前 HTTP 网关只监听
-`127.0.0.1`，但还没有远程认证，不应直接暴露到网络。
+网关只监听 `127.0.0.1`，但当前没有远程认证，不应直接暴露到网络。
 
-### 同 JVM 模式
+### 同 JVM 集成
 
 ```java
 import io.carbongate.model.Action;
@@ -296,17 +323,17 @@ var runtime = CarbonGateRuntime.fromConfig(
         PolicyProfile.STRICT
 );
 var result = runtime.guard().evaluate(
-        Action.shell("git status", Path.of("/srv/application/workspace"))
+        Action.shell("git status", Path.of("/srv/app/workspace"))
 );
 if (result.decision() == Decision.ALLOW) {
     // 执行真实操作
 }
 ```
 
-业务代码必须在操作执行前调用 `guard().evaluate(...)`，并且只在
-`Decision.ALLOW` 时继续。`ASK` 不是允许结果。
+业务代码必须在真实操作前完成评估，并且只在 `Decision.ALLOW` 时继续。
+`ASK` 不代表允许。
 
-### 企业详细审计模式
+### 企业详细审计
 
 ```java
 var runtime = CarbonGateRuntime.enterprise(
@@ -317,27 +344,51 @@ var runtime = CarbonGateRuntime.enterprise(
 );
 ```
 
-企业模式记录允许、待授权、批准、拒绝和内部错误等详细事件；要求的审计
-写入失败时会 fail closed，返回 `DENY`。企业也可以实现 `AuditSink`，将事件
-送入现有 SIEM、数据库或日志平台。
+企业模式详细记录允许、待授权、批准、拒绝和内部错误。必要审计写入失败时
+会 fail closed 并返回 `DENY`。企业可以实现 `AuditSink`，把事件写入已有的
+SIEM、数据库或日志平台。
 
-Spring Boot Starter 和框架专用适配器将在核心 API 稳定后提供。
+## 4. 配置和管理 CarbonGate
 
-## 配置说明
+### 核心命令
 
-配置文件位置：
-
-- 默认：`~/.carbongate/carbon.conf`
-- 自定义：设置环境变量 `CARBON_HOME=/custom/state/directory`
-- 查看路径：`carbon config path`
-
-生成默认配置：
-
-```bash
-carbon config init
+```text
+carbon status
+carbon rules
+carbon config init|show|path|set <key> <value>
+carbon blocked [--limit 20]
+carbon approvals list|approve <id>|deny <id>
+carbon mode show|set <自然语言级别>
+carbon control "自然语言级别指令"
+carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
+carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
+carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
+carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
+carbon redact TEXT
+carbon run [--workspace PATH] -- AGENT [ARGS...]
+carbon version
 ```
 
-完整配置示例：
+常用示例：
+
+```bash
+carbon check --workspace /path/to/project -- 'git status'
+carbon exec --workspace /path/to/project -- 'touch result.txt'
+carbon blocked --limit 20
+carbon control "以后每次都要手动授权"
+carbon control "恢复默认平衡模式"
+```
+
+### 配置文件
+
+macOS/Linux 默认路径是 `~/.carbongate/carbon.conf`，Windows 默认路径是
+`%USERPROFILE%\.carbongate\carbon.conf`。查看当前路径：
+
+```bash
+carbon config path
+```
+
+完整配置：
 
 ```properties
 mode=BALANCED
@@ -354,18 +405,18 @@ alerts.consoleDailyLimit=100
 
 | 配置项 | 默认值 | 说明 |
 |---|---:|---|
-| `mode` | `BALANCED` | 全局执行级别：`BALANCED`、`WARN`、`APPROVAL`、`BLOCK` |
-| `rules.shell.enabled` | `true` | Shell 风险规则 |
+| `mode` | `BALANCED` | `BALANCED`、`WARN`、`APPROVAL` 或 `BLOCK` |
+| `rules.shell.enabled` | `true` | Shell 命令风险规则 |
 | `rules.filesystem.enabled` | `true` | 文件边界和路径风险规则 |
 | `rules.network.enabled` | `true` | 网络外发风险规则 |
-| `rules.secrets.enabled` | `true` | 敏感信息风险规则；输出仍会进行基础脱敏 |
+| `rules.secrets.enabled` | `true` | 敏感信息风险规则；基础脱敏仍会执行 |
 | `audit.mode` | `LOCAL_MINIMAL` | `LOCAL_MINIMAL` 或 `ENTERPRISE_DETAILED` |
 | `audit.local.dailyLimitBytes` | `10000000` | 本地日志每日合计硬上限，最大 10,000,000 字节 |
 | `audit.enterprise.directory` | `enterprise-audit` | 企业审计目录；相对路径基于 `CARBON_HOME` |
 | `audit.enterprise.dailyLimitBytes` | `100000000` | 企业审计每日安全上限 |
-| `alerts.consoleDailyLimit` | `100` | 长期运行 MCP 代理每日控制台告警数量上限 |
+| `alerts.consoleDailyLimit` | `100` | 长期运行 MCP 代理的控制台告警上限 |
 
-命令修改配置：
+通过命令修改：
 
 ```bash
 carbon config set rules.network.enabled false
@@ -374,47 +425,62 @@ carbon config set audit.mode ENTERPRISE_DETAILED
 ```
 
 规则和 `mode` 在下一次 Tool Call 生效；审计模式、目录和容量变更需要重启
-长期运行的 Gateway 或 MCP 代理。未知配置项和非法值会被拒绝。关闭规则会
-降低保护能力，应经过安全评审。
+长期运行的 Gateway 或 MCP 代理。未知配置项和非法值会被拒绝。
 
 ### 执行模式
 
 | 模式 | 行为 |
 |---|---|
-| `BALANCED` | 根据风险等级自动允许、请求授权或拒绝 |
+| `BALANCED` | 按照风险自动允许、请求授权或拒绝 |
 | `WARN` | 显示风险，但允许操作 |
 | `APPROVAL` | 每个操作都需要一次性人工批准 |
 | `BLOCK` | 拒绝所有 Agent 操作 |
 
-`--profile strict|balanced|audit` 决定风险等级如何映射为决策，`mode` 则是
-运行时的全局控制级别。
+支持中文或英文自然语言切换：
 
-## 日志与告警
+```bash
+carbon control "切换到警告提醒"
+carbon control "以后每次都要手动授权"
+carbon control "完全拦截所有操作"
+carbon control "恢复默认平衡模式"
+```
 
-本地 Codex、OpenClaw 和 CLI 安装默认使用 `LOCAL_MINIMAL`：
+`--profile strict|balanced|audit` 决定风险如何映射为决策，`mode` 是全局运行
+控制级别。
 
-- 只写完全拦截和内部错误；允许、警告、待授权不落盘
+### 日志与告警
+
+本地 CLI、Codex 和 OpenClaw 默认使用 `LOCAL_MINIMAL`：
+
+- 只写完全拦截和内部错误
+- 允许、警告和待授权事件不落盘
 - 拦截与错误文件共享每天 10,000,000 字节硬上限
-- 单条记录不超过 1,024 字节，并在脱敏后截断长文本
-- 日志位置可以通过 `carbon status` 查询
+- 单条记录不超过 1,024 字节，长文本会在脱敏后截断
+- `carbon status` 可以查询日志位置和当天用量
 
-企业 Java 服务可以显式启用 `ENTERPRISE_DETAILED`，详细记录安全决策和授权
-事件。更多说明见 [控制、授权与日志](docs/control-and-logging.md)。
+企业 Java 服务可以显式使用 `ENTERPRISE_DETAILED`，完整记录安全决策和授权
+事件。详细说明见 [控制、授权与日志](docs/control-and-logging.md)。
 
-## 开发、测试与许可证
+## 安全与开发
+
+将 CarbonGate 作为安全边界之前，请阅读[威胁模型](docs/threat-model.md)。
+发现疑似漏洞时按照 [SECURITY.md](SECURITY.md) 报告。
+
+运行完整校验：
+
+```bash
+./scripts/verify.sh
+```
+
+其他开发命令：
 
 ```bash
 ./scripts/test.sh
 ./scripts/build.sh
 ./scripts/functional-test.sh
-./scripts/verify.sh
 ./scripts/package.sh 0.2.0
 ```
 
-`scripts/verify.sh` 是本地和 CI 的统一验证入口，包括 JDK 21 编译、单元测试、
-功能测试和依赖/许可证检查。
-
-CarbonGate 使用 [Apache License 2.0](LICENSE)。发布前必须遵循
-[依赖与许可证策略](docs/dependency-policy.md)，并同步维护
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。安全边界和已知限制见
-[威胁模型](docs/threat-model.md)，漏洞报告方式见 [SECURITY.md](SECURITY.md)。
+CarbonGate 使用 [Apache License 2.0](LICENSE)。分发的产物必须遵循
+[依赖与许可证策略](docs/dependency-policy.md)，并及时维护
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

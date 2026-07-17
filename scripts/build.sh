@@ -18,4 +18,9 @@ HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 exec java -jar "$HERE/carbongate.jar" "$@"
 EOF
 chmod +x "$OUT/carbon"
+
+cat > "$OUT/carbon.cmd" <<'EOF'
+@echo off
+java -jar "%~dp0carbongate.jar" %*
+EOF
 printf 'Built %s\n' "$OUT/carbon"
