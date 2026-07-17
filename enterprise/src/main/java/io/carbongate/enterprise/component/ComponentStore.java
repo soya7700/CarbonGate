@@ -155,6 +155,15 @@ public final class ComponentStore {
         return List.copyOf(result);
     }
 
+    public List<ComponentManifest> activeComponents() throws IOException {
+        List<ComponentManifest> result = new ArrayList<>();
+        for (Map.Entry<String, String> active : activeVersions().entrySet()) {
+            result.add(require(active.getKey(), active.getValue()));
+        }
+        result.sort(Comparator.comparing(ComponentManifest::id));
+        return List.copyOf(result);
+    }
+
     private Map<String, String> activeVersions() throws IOException {
         if (!Files.isRegularFile(registry)) return Map.of();
         Map<String, Object> value = Json.object(Files.readString(registry, StandardCharsets.UTF_8));

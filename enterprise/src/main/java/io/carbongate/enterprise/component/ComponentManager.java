@@ -81,6 +81,10 @@ public final class ComponentManager {
                 "components", List.copyOf(components));
     }
 
+    public Map<String, Object> guard(Map<String, Object> request) throws IOException, InterruptedException {
+        return new EnterpriseGuardPipeline(store, providers).evaluate(request);
+    }
+
     private Map<String, Object> health(ComponentManifest manifest) throws IOException, InterruptedException {
         if (manifest.kind() == ComponentManifest.Kind.PACK) {
             PackDocument pack = PackDocument.read(store.componentDirectory(manifest.id(), manifest.version())

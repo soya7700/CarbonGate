@@ -75,6 +75,11 @@ public final class EnterpriseCli {
                 System.out.println(Json.stringify(components.invoke(args[1], args[2], Json.object(args[3]))));
                 yield 0;
             }
+            case "guard" -> {
+                requireLength(args, 2);
+                System.out.println(Json.stringify(components.guard(Json.object(args[1]))));
+                yield 0;
+            }
             case "version", "--version" -> {
                 System.out.println("CarbonGate Enterprise Component Host 0.1.0 (protocol v1, Java 21)");
                 yield 0;
@@ -107,6 +112,7 @@ public final class EnterpriseCli {
                   carbon-enterprise remove ID VERSION
                   carbon-enterprise doctor
                   carbon-enterprise invoke ID OPERATION JSON
+                  carbon-enterprise guard JSON
                   carbon-enterprise version
                 """);
     }

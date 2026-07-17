@@ -21,6 +21,7 @@ approval for risky operations.
 | Write a data-only sensitive-data rule Pack | [Rule Packs v1](docs/rule-packs.md) |
 | Inspect sensitive data with an optional Provider | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
 | Run commands in an optional container Sandbox | [Container Sandbox Provider](docs/container-sandbox.md) |
+| Compose enterprise security components | [Enterprise Guard Pipeline](docs/enterprise-pipeline.md) |
 
 ## What CarbonGate provides
 
