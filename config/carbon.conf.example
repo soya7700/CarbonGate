@@ -10,7 +10,7 @@ rules.secrets.enabled=true
 # LOCAL_MINIMAL is the default for Codex, OpenClaw, and local CLI installs.
 # ENTERPRISE_DETAILED records every decision and approval event.
 audit.mode=LOCAL_MINIMAL
-audit.local.dailyLimitBytes=1000000
+audit.local.dailyLimitBytes=10000000
 audit.enterprise.directory=enterprise-audit
 audit.enterprise.dailyLimitBytes=100000000
 

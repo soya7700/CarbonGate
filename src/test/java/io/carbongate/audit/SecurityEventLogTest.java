@@ -21,14 +21,24 @@ public final class SecurityEventLogTest {
         assert stats.blockedEvents() > 0;
         assert stats.blockedEvents() < 20;
         String content = Files.readString(events.blockedPath());
-        assert content.contains("\"level\":\"ERROR\"");
+        assert content.contains("\"capability\":\"shell\"");
+        assert !content.contains("\"level\"");
+        assert !content.contains("\"type\"");
+        assert !content.contains("\"kind\"");
+        assert !content.contains("\"id\"");
+        assert !content.contains("\"actor\"");
+        assert !content.contains("deny by block mode");
+        assert content.contains("recursive deletion targeting the filesystem root");
         assert !content.contains("synthetic-log-secret");
+        for (String line : Files.readAllLines(events.blockedPath())) {
+            assert line.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 1_024;
+        }
 
         Path secondHome = Files.createTempDirectory("carbon-errors-");
         SecurityEventLog errors = new SecurityEventLog(secondHome, 10_000);
         assert errors.recordError("test", "password=synthetic-error-secret");
         String errorContent = Files.readString(errors.errorPath());
-        assert errorContent.contains("\"type\":\"internal_error\"");
+        assert errorContent.contains("\"component\":\"test\"");
         assert !errorContent.contains("synthetic-error-secret");
 
         Path concurrentHome = Files.createTempDirectory("carbon-concurrent-events-");
@@ -40,7 +50,7 @@ public final class SecurityEventLogTest {
         }
         assert concurrent.todayStats().bytesWritten() <= 4_000;
         for (String line : Files.readAllLines(concurrent.blockedPath())) {
-            assert io.carbongate.json.Json.object(line).get("type").equals("blocked");
+            assert io.carbongate.json.Json.object(line).get("capability").equals("shell");
         }
     }
 }

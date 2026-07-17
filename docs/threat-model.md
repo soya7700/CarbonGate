@@ -29,7 +29,8 @@ MCP proxy rejects dangerous tool calls before forwarding them to the server.
   namespaces and are not a complete defense against filesystem race conditions.
 - The local HTTP API has no remote authentication and binds to loopback only.
 - Blocked/error logs are not cryptographically signed. They deliberately omit
-  allow, warning, and pending-approval events and stop at 1,000,000 bytes/day.
+  allow, warning, and pending-approval events and stop at 10,000,000 bytes/day.
+  Individual records omit redundant fields and are capped at 1,024 bytes.
 - The preceding minimal-log guarantee applies to local-agent mode. Explicit
   enterprise audit records all decisions in a separate configured sink and has
   its own capacity and retention obligations.

@@ -10,6 +10,7 @@ public final class SettingsStoreTest {
         Path home = Files.createTempDirectory("carbon-settings-");
         SettingsStore settings = new SettingsStore(home);
         assert settings.mode() == EnforcementMode.BALANCED;
+        assert settings.localDailyLimitBytes() == 10_000_000L;
 
         settings.setMode(EnforcementMode.APPROVAL);
         assert settings.mode() == EnforcementMode.APPROVAL;
@@ -19,9 +20,11 @@ public final class SettingsStoreTest {
         assert settings.rules().shell();
         settings.set(SettingsStore.AUDIT_MODE, "enterprise_detailed");
         assert settings.auditMode() == AuditMode.ENTERPRISE_DETAILED;
+        settings.set(SettingsStore.LOCAL_LOG_LIMIT, "10000000");
+        assert settings.localDailyLimitBytes() == 10_000_000L;
         try {
-            settings.set(SettingsStore.LOCAL_LOG_LIMIT, "1000001");
-            throw new AssertionError("Local-agent log cap must not exceed 1 MB");
+            settings.set(SettingsStore.LOCAL_LOG_LIMIT, "10000001");
+            throw new AssertionError("Local-agent log cap must not exceed 10 MB");
         } catch (IllegalArgumentException expected) {
             // expected
         }

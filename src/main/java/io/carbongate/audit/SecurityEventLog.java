@@ -26,9 +26,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Blocked and internal-error files share one hard daily byte budget.
  */
 public final class SecurityEventLog implements AuditSink {
-    public static final long DEFAULT_DAILY_LIMIT_BYTES = 1_000_000L;
-    private static final int MAX_RESOURCE_CHARS = 1024;
-    private static final int MAX_MESSAGE_CHARS = 1024;
+    public static final long DEFAULT_DAILY_LIMIT_BYTES = 10_000_000L;
+    private static final int MAX_EVENT_BYTES = 1_024;
+    private static final int MAX_RESOURCE_CHARS = 256;
+    private static final int MAX_MESSAGE_CHARS = 256;
     private static final Object JVM_WRITE_LOCK = new Object();
     private final Path logDirectory;
     private final long dailyLimitBytes;
@@ -47,16 +48,13 @@ public final class SecurityEventLog implements AuditSink {
 
     public boolean recordBlocked(Action action, Evaluation evaluation) {
         Map<String, Object> event = new LinkedHashMap<>();
-        event.put("level", "ERROR");
-        event.put("type", "blocked");
-        event.put("id", evaluation.id());
         event.put("at", evaluation.evaluatedAt().toString());
-        event.put("actor", sanitize(action.actor(), 128));
         event.put("capability", action.capability().name().toLowerCase());
-        event.put("operation", sanitize(action.operation(), 128));
+        event.put("operation", sanitize(action.operation(), 80));
         event.put("resource", truncate(evaluation.sanitizedResource(), MAX_RESOURCE_CHARS));
         event.put("risk", evaluation.risk().name().toLowerCase());
-        event.put("reason", sanitize(evaluation.reason(), MAX_MESSAGE_CHARS));
+        String reason = evaluation.findings().isEmpty() ? evaluation.reason() : evaluation.findings().getFirst();
+        event.put("reason", sanitize(reason, MAX_MESSAGE_CHARS));
         return append("blocked", event);
     }
 
@@ -69,10 +67,8 @@ public final class SecurityEventLog implements AuditSink {
     public boolean recordError(String component, String message) {
         SecretScanner.ScanResult sanitized = secrets.scan(message == null ? "unknown error" : message);
         Map<String, Object> event = new LinkedHashMap<>();
-        event.put("level", "ERROR");
-        event.put("type", "internal_error");
         event.put("at", java.time.Instant.now().toString());
-        event.put("component", truncate(component, 128));
+        event.put("component", truncate(component, 64));
         event.put("message", truncate(sanitized.redacted(), MAX_MESSAGE_CHARS));
         return append("error", event);
     }
@@ -123,7 +119,7 @@ public final class SecurityEventLog implements AuditSink {
 
     private boolean append(String category, Map<String, Object> event) {
         byte[] bytes = (Json.stringify(event) + "\n").getBytes(StandardCharsets.UTF_8);
-        if (bytes.length > 4096) return false;
+        if (bytes.length > MAX_EVENT_BYTES) return false;
         try {
             synchronized (JVM_WRITE_LOCK) {
                 Files.createDirectories(logDirectory);

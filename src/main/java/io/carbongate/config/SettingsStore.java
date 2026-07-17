@@ -152,7 +152,7 @@ public final class SettingsStore {
             case LOCAL_LOG_LIMIT -> {
                 long limit = Long.parseLong(value.trim());
                 if (limit < 1 || limit > SecurityEventLog.DEFAULT_DAILY_LIMIT_BYTES) {
-                    throw new IllegalArgumentException(key + " must be between 1 and 1000000");
+                    throw new IllegalArgumentException(key + " must be between 1 and 10000000");
                 }
             }
             case ENTERPRISE_LIMIT -> {

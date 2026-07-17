@@ -61,15 +61,17 @@ rules.filesystem.enabled=true
 rules.network.enabled=true
 rules.secrets.enabled=true
 audit.mode=LOCAL_MINIMAL
-audit.local.dailyLimitBytes=1000000
+audit.local.dailyLimitBytes=10000000
 audit.enterprise.directory=enterprise-audit
 audit.enterprise.dailyLimitBytes=100000000
 alerts.consoleDailyLimit=100
 ```
 
 Unknown keys and invalid values are rejected. The local daily limit can be
-reduced but cannot be configured above 1,000,000 bytes. Mode and rule changes
+reduced but cannot be configured above 10,000,000 bytes. Mode and rule changes
 are live; audit sink, directory, and capacity changes require a Gateway restart.
+Existing installations that intentionally retain the former limit can opt in to
+the new default with `carbon config set audit.local.dailyLimitBytes 10000000`.
 
 ## Manual approval
 
@@ -104,10 +106,13 @@ into a log flood.
 
 CarbonGate never writes `allow`, warning, or `ask` decisions to log files. Only
 fully blocked actions and internal errors are written, both at `ERROR` level.
-They use daily JSONL files and share one locked, hard budget of 1,000,000 bytes
+They use daily JSONL files and share one locked, hard budget of 10,000,000 bytes
 per local day. A complete JSON event is dropped if appending it would exceed the
-budget; files are never partially appended. Individual events are bounded to
-4,096 bytes and resources/messages are truncated after redaction.
+budget; files are never partially appended. Records retain only the time,
+capability, operation, target, risk, and reason needed for investigation.
+Redundant level, event type, event ID, and actor fields are omitted; target and reason text
+are limited to 256 characters, only the first matched rule is stored as the
+reason, and each record is bounded to 1,024 bytes.
 
 ## Enterprise Java audit
 
@@ -139,4 +144,4 @@ enforce its own retention and capacity policy.
 Enterprise audit is fail-closed: when a required detailed decision event cannot
 be written (including when its configured cap is exhausted), CarbonGate returns
 `deny` instead of executing an unaudited action. Local minimal mode continues to
-enforce a block even if its already-full 1 MB log cannot accept another event.
+enforce a block even if its already-full 10 MB log cannot accept another event.

@@ -15,6 +15,7 @@ test -x "$CARBON" || {
 "$CARBON" version | grep -F 'CarbonGate 0.2.0 (Java 21)' >/dev/null
 "$CARBON" config init | grep -F '"status":"created"' >/dev/null
 "$CARBON" config show | grep -F '"audit.mode":"LOCAL_MINIMAL"' >/dev/null
+"$CARBON" config show | grep -F '"audit.local.dailyLimitBytes":"10000000"' >/dev/null
 "$CARBON" config set rules.network.enabled false | grep -F '"value":"false"' >/dev/null
 "$CARBON" rules | grep -F '"network":false' >/dev/null
 "$CARBON" config set rules.network.enabled true >/dev/null
@@ -80,12 +81,12 @@ blocked_mcp=$(printf '%s\n' "$danger_request" | "$CARBON" mcp proxy \
 printf '%s\n' "$blocked_mcp" | grep -F '"code":-32001' >/dev/null
 printf '%s\n' "$blocked_mcp" | grep -F 'CarbonGate blocked tool call' >/dev/null
 
-"$CARBON" blocked --limit 5 | grep -F '"type":"blocked"' >/dev/null
+"$CARBON" blocked --limit 5 | grep -F '"capability":"shell"' >/dev/null
 status_result=$("$CARBON" status)
 printf '%s\n' "$status_result" | grep -F '"logLevel":"ERROR only"' >/dev/null
 log_bytes=$(printf '%s\n' "$status_result" | sed -n 's/.*"todayLogBytes":\([0-9]*\).*/\1/p')
 test -n "$log_bytes"
-test "$log_bytes" -le 1000000
+test "$log_bytes" -le 10000000
 test -s "$CARBON_HOME/logs/blocked-$(date +%F).jsonl"
 test ! -e "$WORKSPACE/.carbongate/audit.jsonl"
 
