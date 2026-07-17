@@ -29,10 +29,12 @@ public final class ComponentStore {
     private static final int MAX_ENTRIES = 512;
     private final Path root;
     private final Path registry;
+    private final ComponentTrustStore trust;
 
     public ComponentStore(Path carbonHome) {
         root = carbonHome.toAbsolutePath().normalize().resolve("enterprise").resolve("components");
         registry = root.resolve("registry.json");
+        trust = new ComponentTrustStore(carbonHome);
     }
 
     public synchronized ComponentManifest install(Path archive) throws IOException {
@@ -51,6 +53,7 @@ public final class ComponentStore {
             requireFile(staging.resolve("checksums.json"));
             ComponentManifest manifest = ComponentManifest.read(staging.resolve("manifest.json"));
             verifyChecksums(staging);
+            trust.verify(staging);
             if (manifest.kind() == ComponentManifest.Kind.PACK) {
                 PackDocument.read(staging.resolve("payload").resolve("pack.json"));
             }

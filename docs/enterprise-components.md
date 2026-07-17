@@ -55,10 +55,10 @@ exactly once. Installation rejects missing license artifacts, duplicate
 versions, path traversal, oversized archives, undeclared payloads, and checksum
 mismatches. A Pack must not declare an entrypoint or executable operation.
 
-Checksums detect accidental or post-build payload changes; they do not prove
-publisher identity. v1 does not yet implement package signatures, so install
-components only from a trusted publisher and review their declared entrypoint
-and permissions first.
+Checksums detect accidental or post-build payload changes. Optional Ed25519
+signatures authenticate a key in the local publisher trust store; see
+[component signing and trust policy](component-trust.md). Review every declared
+entrypoint and permission before trusting a publisher key.
 
 ## Lifecycle
 
