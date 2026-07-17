@@ -1,0 +1,13 @@
+{
+  "apiVersion": "carbongate.io/v1",
+  "kind": "provider",
+  "metadata": {"id": "approval-policy-provider", "version": "1.0.0"},
+  "spec": {
+    "entrypoint": ["java", "-jar", "${componentDir}/payload/provider.jar"],
+    "operations": ["authorize"],
+    "permissions": [],
+    "timeoutMillis": 2000,
+    "failureMode": "fail_closed"
+  },
+  "license": {"spdx": "Apache-2.0"}
+}

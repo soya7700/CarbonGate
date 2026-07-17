@@ -42,5 +42,7 @@ grep -F 'docs/container-sandbox.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/container-sandbox.md' "$ROOT/README-CN.md" >/dev/null
 grep -F 'docs/enterprise-pipeline.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/enterprise-pipeline.md' "$ROOT/README-CN.md" >/dev/null
+grep -F 'docs/approval-provider.md' "$ROOT/README.md" >/dev/null
+grep -F 'docs/approval-provider.md' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'
