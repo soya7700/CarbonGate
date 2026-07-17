@@ -145,6 +145,16 @@ public final class ComponentStore {
         return componentDirectory(id, manifest.version());
     }
 
+    public List<ComponentManifest> activeComponents(ComponentManifest.Kind kind) throws IOException {
+        List<ComponentManifest> result = new ArrayList<>();
+        for (Map.Entry<String, String> active : activeVersions().entrySet()) {
+            ComponentManifest manifest = require(active.getKey(), active.getValue());
+            if (manifest.kind() == kind) result.add(manifest);
+        }
+        result.sort(Comparator.comparing(ComponentManifest::id));
+        return List.copyOf(result);
+    }
+
     private Map<String, String> activeVersions() throws IOException {
         if (!Files.isRegularFile(registry)) return Map.of();
         Map<String, Object> value = Json.object(Files.readString(registry, StandardCharsets.UTF_8));

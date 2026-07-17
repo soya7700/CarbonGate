@@ -32,6 +32,8 @@ test -s "$ROOT/build/carbongate-enterprise-host.jar" || "$ROOT/scripts/build-ent
 check_bytes 'Enterprise Component Host' "$ROOT/build/carbongate-enterprise-host.jar" 153600
 test -s "$ROOT/build/sensitive-data-baseline-1.0.0.carbon" || "$ROOT/scripts/build-pack.sh" >/dev/null
 check_bytes 'Sensitive Data Baseline Pack' "$ROOT/build/sensitive-data-baseline-1.0.0.carbon" 51200
+test -s "$ROOT/build/sensitive-data-provider-1.0.0.carbon" || "$ROOT/scripts/build-provider.sh" >/dev/null
+check_bytes 'Sensitive Data Provider package' "$ROOT/build/sensitive-data-provider-1.0.0.carbon" 102400
 
 if jar --list --file "$JAR" | grep -q '^io/carbongate/enterprise/'; then
   printf 'Enterprise implementation leaked into the base JAR.\n' >&2
