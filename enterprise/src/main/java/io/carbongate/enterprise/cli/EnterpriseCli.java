@@ -2,6 +2,7 @@ package io.carbongate.enterprise.cli;
 
 import io.carbongate.enterprise.component.ComponentManager;
 import io.carbongate.enterprise.component.ComponentPackageBuilder;
+import io.carbongate.enterprise.component.ComponentTrustStore;
 import io.carbongate.json.Json;
 
 import java.nio.file.Path;
@@ -30,7 +31,8 @@ public final class EnterpriseCli {
             usage();
             return 0;
         }
-        ComponentManager components = new ComponentManager(carbonHome());
+        Path home = carbonHome();
+        ComponentManager components = new ComponentManager(home);
         return switch (args[0]) {
             case "install" -> {
                 requireLength(args, 2);
@@ -38,12 +40,16 @@ public final class EnterpriseCli {
                 yield 0;
             }
             case "package" -> {
-                requireLength(args, 3);
-                var manifest = new ComponentPackageBuilder().build(Path.of(args[1]), Path.of(args[2]));
+                if (args.length != 3 && args.length != 6) throw new IllegalArgumentException("Invalid package arguments");
+                var builder = new ComponentPackageBuilder();
+                var manifest = args.length == 3
+                        ? builder.build(Path.of(args[1]), Path.of(args[2]))
+                        : signedPackage(builder, args);
                 System.out.println(Json.stringify(Map.of("state", "packaged", "component", manifest.map(),
                         "archive", Path.of(args[2]).toAbsolutePath().normalize().toString())));
                 yield 0;
             }
+            case "trust" -> trust(new ComponentTrustStore(home), args);
             case "list" -> {
                 requireLength(args, 1);
                 System.out.println(Json.stringify(Map.of("components", components.list())));
@@ -105,6 +111,11 @@ public final class EnterpriseCli {
 
                   carbon-enterprise install COMPONENT.carbon
                   carbon-enterprise package SOURCE_DIRECTORY OUTPUT.carbon
+                  carbon-enterprise package SOURCE OUTPUT.carbon --sign KEY_ID PRIVATE_KEY
+                  carbon-enterprise trust status
+                  carbon-enterprise trust add KEY_ID PUBLIC_KEY
+                  carbon-enterprise trust policy allow_unsigned|require_signed
+                  carbon-enterprise trust generate KEY_ID DIRECTORY
                   carbon-enterprise list
                   carbon-enterprise enable ID VERSION
                   carbon-enterprise rollback ID VERSION
@@ -115,6 +126,38 @@ public final class EnterpriseCli {
                   carbon-enterprise guard JSON
                   carbon-enterprise version
                 """);
+    }
+
+    private static io.carbongate.enterprise.component.ComponentManifest signedPackage(
+            ComponentPackageBuilder builder, String[] args) throws Exception {
+        if (!args[3].equals("--sign")) throw new IllegalArgumentException("Expected --sign KEY_ID PRIVATE_KEY");
+        return builder.build(Path.of(args[1]), Path.of(args[2]), args[4], Path.of(args[5]));
+    }
+
+    private static int trust(ComponentTrustStore trust, String[] args) throws Exception {
+        if (args.length < 2) throw new IllegalArgumentException("Trust subcommand is required");
+        switch (args[1]) {
+            case "status" -> {
+                requireLength(args, 2);
+                System.out.println(Json.stringify(trust.status()));
+            }
+            case "add" -> {
+                requireLength(args, 4);
+                trust.add(args[2], Path.of(args[3]));
+                System.out.println(Json.stringify(trust.status()));
+            }
+            case "policy" -> {
+                requireLength(args, 3);
+                trust.policy(args[2]);
+                System.out.println(Json.stringify(trust.status()));
+            }
+            case "generate" -> {
+                requireLength(args, 4);
+                System.out.println(Json.stringify(trust.generate(args[2], Path.of(args[3]))));
+            }
+            default -> throw new IllegalArgumentException("Unknown trust subcommand: " + args[1]);
+        }
+        return 0;
     }
 
     private static String compact(Throwable error) {

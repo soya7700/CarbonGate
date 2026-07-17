@@ -46,5 +46,7 @@ grep -F 'docs/approval-provider.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/approval-provider.md' "$ROOT/README-CN.md" >/dev/null
 grep -F 'docs/enterprise-audit-provider.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/enterprise-audit-provider.md' "$ROOT/README-CN.md" >/dev/null
+grep -F 'docs/component-trust.md' "$ROOT/README.md" >/dev/null
+grep -F 'docs/component-trust.md' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'

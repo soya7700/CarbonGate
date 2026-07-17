@@ -23,6 +23,7 @@ CarbonGate 在命令或工具调用执行前进行评估，应用工作区和网
 | 编排企业安全组件 | [Enterprise Guard Pipeline](docs/enterprise-pipeline.md) |
 | 执行企业审批决策 | [Approval Policy Provider](docs/approval-provider.md) |
 | 记录可校验的企业审计事件 | [Enterprise Audit Provider](docs/enterprise-audit-provider.md) |
+| 强制企业组件签名 | [Component signing and trust](docs/component-trust.md) |
 
 ## 核心能力
 
