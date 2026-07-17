@@ -10,7 +10,7 @@ STAGE="$ROOT/build/carbongate-$VERSION"
 mkdir -p "$STAGE/bin" "$STAGE/config" "$STAGE/docs"
 cp "$ROOT/build/carbongate.jar" "$ROOT/build/carbon" "$STAGE/bin/"
 cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$ROOT/THIRD_PARTY_NOTICES.md" "$STAGE/"
-cp "$ROOT/README.md" "$ROOT/SECURITY.md" "$STAGE/"
+cp "$ROOT/README.md" "$ROOT/README-CN.md" "$ROOT/SECURITY.md" "$STAGE/"
 cp "$ROOT/config/carbon.conf.example" "$STAGE/config/"
 cp "$ROOT/docs/"*.md "$STAGE/docs/"
 
