@@ -1,0 +1,61 @@
+{
+  "apiVersion": "carbongate.pack/v1",
+  "rules": [
+    {
+      "id": "personal.email",
+      "audience": "personal",
+      "category": "personal.contact.email",
+      "severity": "medium",
+      "match": {"type": "email"}
+    },
+    {
+      "id": "personal.phone-cn",
+      "audience": "personal",
+      "category": "personal.contact.phone",
+      "severity": "high",
+      "match": {"type": "phone_cn"}
+    },
+    {
+      "id": "personal.id-cn",
+      "audience": "personal",
+      "category": "personal.identity.id-card",
+      "severity": "critical",
+      "match": {"type": "id_cn"}
+    },
+    {
+      "id": "personal.bank-card",
+      "audience": "both",
+      "category": "financial.bank-card",
+      "severity": "critical",
+      "match": {"type": "bank_card"}
+    },
+    {
+      "id": "personal.family",
+      "audience": "personal",
+      "category": "personal.family",
+      "severity": "high",
+      "match": {"type": "keywords", "terms": ["家庭成员", "配偶姓名", "子女姓名", "紧急联系人"]}
+    },
+    {
+      "id": "enterprise.financial",
+      "audience": "enterprise",
+      "category": "enterprise.financial",
+      "severity": "critical",
+      "match": {"type": "keywords", "terms": ["营业收入", "净利润", "应收账款", "银行余额", "未公开财报"]}
+    },
+    {
+      "id": "enterprise.member-assets",
+      "audience": "enterprise",
+      "category": "enterprise.member-assets",
+      "severity": "critical",
+      "match": {"type": "keywords", "terms": ["会员余额", "积分余额", "储值余额", "会员资产"]}
+    },
+    {
+      "id": "shared.api-secret",
+      "audience": "both",
+      "category": "credential.api-secret",
+      "severity": "critical",
+      "match": {"type": "api_secret"}
+    }
+  ]
+}

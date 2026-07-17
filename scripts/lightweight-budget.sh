@@ -30,6 +30,8 @@ check_bytes 'Base zip' "$ZIP" 512000
 check_bytes 'Default configuration' "$CONFIG" 4096
 test -s "$ROOT/build/carbongate-enterprise-host.jar" || "$ROOT/scripts/build-enterprise.sh" >/dev/null
 check_bytes 'Enterprise Component Host' "$ROOT/build/carbongate-enterprise-host.jar" 153600
+test -s "$ROOT/build/sensitive-data-baseline-1.0.0.carbon" || "$ROOT/scripts/build-pack.sh" >/dev/null
+check_bytes 'Sensitive Data Baseline Pack' "$ROOT/build/sensitive-data-baseline-1.0.0.carbon" 51200
 
 if jar --list --file "$JAR" | grep -q '^io/carbongate/enterprise/'; then
   printf 'Enterprise implementation leaked into the base JAR.\n' >&2

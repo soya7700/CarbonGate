@@ -77,7 +77,11 @@ public final class ComponentManager {
     }
 
     private Map<String, Object> health(ComponentManifest manifest) throws IOException, InterruptedException {
-        if (manifest.kind() == ComponentManifest.Kind.PACK) return Map.of("status", "pass", "mode", "data_only");
+        if (manifest.kind() == ComponentManifest.Kind.PACK) {
+            PackDocument pack = PackDocument.read(store.componentDirectory(manifest.id(), manifest.version())
+                    .resolve("payload").resolve("pack.json"));
+            return Map.of("status", "pass", "mode", "data_only", "rules", pack.rules().size());
+        }
         return providers.call(manifest, store.componentDirectory(manifest.id(), manifest.version()),
                 "health", Map.of());
     }

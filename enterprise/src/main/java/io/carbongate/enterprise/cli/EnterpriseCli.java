@@ -1,6 +1,7 @@
 package io.carbongate.enterprise.cli;
 
 import io.carbongate.enterprise.component.ComponentManager;
+import io.carbongate.enterprise.component.ComponentPackageBuilder;
 import io.carbongate.json.Json;
 
 import java.nio.file.Path;
@@ -34,6 +35,13 @@ public final class EnterpriseCli {
             case "install" -> {
                 requireLength(args, 2);
                 System.out.println(Json.stringify(components.install(Path.of(args[1]))));
+                yield 0;
+            }
+            case "package" -> {
+                requireLength(args, 3);
+                var manifest = new ComponentPackageBuilder().build(Path.of(args[1]), Path.of(args[2]));
+                System.out.println(Json.stringify(Map.of("state", "packaged", "component", manifest.map(),
+                        "archive", Path.of(args[2]).toAbsolutePath().normalize().toString())));
                 yield 0;
             }
             case "list" -> {
@@ -91,6 +99,7 @@ public final class EnterpriseCli {
                 CarbonGate Enterprise Component Host
 
                   carbon-enterprise install COMPONENT.carbon
+                  carbon-enterprise package SOURCE_DIRECTORY OUTPUT.carbon
                   carbon-enterprise list
                   carbon-enterprise enable ID VERSION
                   carbon-enterprise rollback ID VERSION
