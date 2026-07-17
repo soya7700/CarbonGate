@@ -1,85 +1,85 @@
 # CarbonGate
 
-Local-first zero-trust security gateway for AI agents and MCP servers.
+Local-first, zero-trust security gateway for AI agents and MCP servers.
 
 [简体中文](README-CN.md)
 
-CarbonGate evaluates commands and tool calls before execution, applies
-workspace and egress policies, redacts secrets, and supports explicit human
-approval for risky operations.
+CarbonGate evaluates commands and MCP tool calls before execution, limits file
+and network access, redacts secrets, and supports explicit approval for risky
+operations. The default installation stays small; enterprise controls are
+independent components that are installed only when needed.
 
-## Choose an integration path
+> [!IMPORTANT]
+> CarbonGate protects only traffic routed through its CLI, Java API, HTTP
+> gateway, or MCP proxy. Host built-in tools are not intercepted automatically.
+
+## Product map
+
+| Product | Purpose | Installed by default |
+|---|---|---:|
+| **CarbonGate Core** | Command/MCP policy, approvals, compact logs, CLI, Java and HTTP APIs | Yes |
+| **CarbonGate Skill** | Natural-language installation, inspection, protection, and control in Codex | With Codex setup |
+| **Enterprise Component Host** | Lifecycle, process isolation, health checks, and Guard Pipeline | No |
+| **Pack** | Declarative rules only; never executable | No |
+| **Provider** | DLP inspection, authorization, audit, or enterprise integrations | No |
+| **Sandbox** | Container-backed command isolation | No |
+
+The architecture deliberately keeps enterprise code out of the Core JAR. See
+[the lightweight architecture boundary](docs/architecture.md).
+
+```text
+Local Agent path
+  Agent / MCP host -> CarbonGate Skill -> Core -> protected MCP route
+
+Enterprise path
+  Application -> Enterprise Guard Pipeline
+                 inspect -> authorize -> sandbox (after allow) -> audit
+                    |           |             |                    |
+                  Pack      Provider       Sandbox              Provider
+```
+
+## Choose a path
 
 | Goal | Start here |
 |---|---|
-| Protect commands on a developer machine | [Recommended one-command install](#1-recommended-one-command-installation) |
-| Build or modify CarbonGate itself | [Install from source](#2-alternative-install-from-source) |
-| Protect Codex, OpenClaw, or another MCP host | [Agent and MCP integration](#3-integrate-codex-openclaw-or-an-mcp-host) |
-| Add checks to a Java 21 application | [Java integration](#4-integrate-a-java-21-application) |
-| Enable detailed enterprise audit | [Enterprise audit](#enterprise-detailed-audit) |
-| Build an optional enterprise component | [Enterprise Component Host](docs/enterprise-components.md) |
-| Write a data-only sensitive-data rule Pack | [Rule Packs v1](docs/rule-packs.md) |
-| Inspect sensitive data with an optional Provider | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
-| Run commands in an optional container Sandbox | [Container Sandbox Provider](docs/container-sandbox.md) |
-| Compose enterprise security components | [Enterprise Guard Pipeline](docs/enterprise-pipeline.md) |
-| Require enterprise approval decisions | [Approval Policy Provider](docs/approval-provider.md) |
-| Record tamper-evident enterprise events | [Enterprise Audit Provider](docs/enterprise-audit-provider.md) |
-| Require signed enterprise components | [Component signing and trust](docs/component-trust.md) |
-
-## What CarbonGate provides
-
-- Shell command risk analysis with `allow`, `ask`, and `deny` decisions
-- File traversal and symlink-escape detection within a configured workspace
-- Network egress risk analysis and sensitive-data leak detection
-- Password, token, API key, and private-data redaction
-- CLI, MCP stdio proxy, loopback HTTP gateway, and Java 21 API
-- Balanced, warn-only, approval-required, and block-all enforcement modes
-- One-time approvals, blocked-event queries, and configurable rule switches
-- Compact local-Agent logs and detailed enterprise audit modes
-
-> [!IMPORTANT]
-> CarbonGate enforces only operations that pass through its CLI, HTTP gateway,
-> Java API, or MCP proxy. `carbon run` is an integration launcher, not an
-> operating-system sandbox. Use a container or OS sandbox for hostile workloads.
-
-CarbonGate is currently an early MVP. Transparent syscall interception and real
-mount-namespace or Chroot filesystem virtualization are not implemented yet.
+| Install for Codex, Claude Code, OpenClaw, or another local CLI | [Recommended one-command installation](#1-recommended-one-command-installation) |
+| Protect an MCP server | [Local Agent and MCP integration](#3-local-agent-and-mcp-integration) |
+| Query blocks, approvals, rules, or change the level | [Core control and configuration](#4-core-control-and-configuration) |
+| Add Pack, DLP, approval, audit, or Sandbox controls | [Enterprise components](#5-enterprise-components) |
+| Integrate a Java 21 service | [Java application integration](#6-java-21-application-integration) |
+| Build or modify CarbonGate | [Install from source](#2-alternative-install-from-source) |
 
 ## Requirements
 
-- Java 21 or newer (`java`) for the recommended prebuilt installation
-- JDK 21 or newer (`java`, `javac`, and `jar`) plus Git only when installing from source
+- Java 21 or newer for a prebuilt local installation
+- JDK 21 (`java`, `javac`, and `jar`) and Git for source or enterprise builds
 - macOS, Linux, or Windows PowerShell 5.1+
 
-The runtime has no third-party source or runtime dependencies.
-The enforced size, dependency, and component boundaries are documented in
-[the lightweight architecture decision](docs/architecture.md).
+Core and first-party components have no third-party source or runtime library
+dependencies. The Container Sandbox can invoke a user-installed Docker or
+Podman CLI; neither is downloaded or redistributed.
 
 ## 1. Recommended: one-command installation
 
-Use a prebuilt CarbonGate archive for normal CLI, Codex, Claude Code,
-OpenClaw, Qoder, CodeBuddy, Gemini CLI, or Copilot CLI installations. This is
-the recommended path because it does not compile source and needs only Java 21.
-
-Download and extract the `.tar.gz` package on macOS/Linux or the `.zip` package
-on Windows. Both packages contain the same tested JAR, configuration,
-documentation, license notices, and platform launchers.
+Use a prebuilt CarbonGate archive for normal local-Agent use. It contains the
+same JDK 21-targeted JAR, launchers, configuration, Skill, documentation, and
+license notices on every platform.
 
 ### macOS and Linux
 
-Run the packaged installer from the extracted directory:
+Extract the `.tar.gz` archive and run:
 
 ```bash
 ./carbongate-VERSION/install.sh --setup
 ```
 
-To configure only selected AI CLIs:
+Configure only selected hosts:
 
 ```bash
 ./carbongate-VERSION/install.sh --host codex,claude,openclaw
 ```
 
-The default command is `~/.local/bin/carbon`. If it is not already on `PATH`:
+The default CLI is `~/.local/bin/carbon`. If needed in the current shell:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -87,52 +87,49 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ### Windows
 
-Open PowerShell in the extracted directory and run:
+Extract the `.zip` archive, open PowerShell, and run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION\install.ps1 -Setup
 ```
 
-To configure only selected AI CLIs:
+Configure only selected hosts:
 
 ```powershell
 .\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"
 ```
 
-The default launcher is
-`%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd`. Use it immediately with:
+Use the CLI immediately in the current terminal:
 
 ```powershell
 $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 ```
 
-### What the installer guarantees
+### Installer behavior
 
-- Verifies that Java can run the JDK 21-targeted CarbonGate JAR
-- Installs only the packaged JAR and a small platform launcher
-- Initializes `carbon.conf` only when it does not already exist
-- Uses idempotent host registration and never duplicates a managed entry
-- Refuses to overwrite an external same-name `carbongate` MCP entry
-- Verifies each registration and rolls it back if verification fails
-- Downloads no runtime dependencies and adds no background service
-- Installs the bundled CarbonGate Skill when Codex is selected and no existing
-  same-name Skill is present
+The installer:
 
-Use `--prefix PATH` on macOS/Linux or `-Prefix PATH` on Windows to choose
-another installation directory. Omit `--setup`/`-Setup` when CarbonGate should
-be installed without changing any AI host configuration.
+- verifies the JDK 21-targeted JAR before installation;
+- preserves an existing `carbon.conf`;
+- registers each detected host at most once;
+- never overwrites an unmanaged same-name `carbongate` entry;
+- verifies new registrations and rolls them back on failure;
+- installs the bundled CarbonGate Skill for Codex without replacing an
+  existing same-name Skill;
+- downloads no dependency and starts no background service.
 
-### Installation layout
+Omit `--setup` or `-Setup` to install without changing host configuration. Use
+`--prefix PATH` or `-Prefix PATH` for a custom destination.
 
-| Item | macOS/Linux default | Windows default |
+| Item | macOS/Linux | Windows |
 |---|---|---|
 | CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd` |
-| JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
-| State and configuration | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
+| Core JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
+| State/config | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
 
-Override the state directory on every platform with `CARBON_HOME`.
+Override state on any platform with `CARBON_HOME`.
 
-### Verify the installation
+### Verify
 
 ```bash
 carbon version
@@ -141,212 +138,82 @@ carbon status
 carbon rules
 ```
 
-`carbon doctor` checks Java, the state directory, configuration validity, the
-10 MB local daily log cap, packaged JAR, integration registry, and detected
-hosts in one machine-readable result.
-
 ## 2. Alternative: install from source
 
-Use the source path when developing CarbonGate, testing a branch, or changing
-the Java implementation. It requires Git and a full JDK 21 toolchain.
+Use this path for development, branch testing, or enterprise component builds.
+It requires a full JDK 21 toolchain.
 
-### macOS
-
-Verify JDK 21 before installation:
-
-```bash
-java -version
-javac -version
-```
-
-Clone and install for the current user:
-
-```bash
-git clone https://github.com/soya7700/CarbonGate.git
-cd CarbonGate
-./scripts/install.sh --setup
-```
-
-`--setup` detects supported local AI CLIs and registers CarbonGate once. Limit
-the operation to selected hosts with `--host codex,claude`.
-
-The default command is `~/.local/bin/carbon`. Add it to the current shell when
-needed:
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-carbon version
-```
-
-To keep the PATH change, add the `export` line to `~/.zshrc` or your active
-shell profile.
-
-### Linux
-
-Install a JDK 21 distribution with the operating system's package manager or
-your approved JDK vendor, then verify it:
-
-```bash
-java -version
-javac -version
-```
-
-Clone and install:
+### macOS and Linux
 
 ```bash
 git clone https://github.com/soya7700/CarbonGate.git
 cd CarbonGate
 ./scripts/install.sh --setup
 export PATH="$HOME/.local/bin:$PATH"
-carbon version
+carbon doctor
 ```
 
-Add the `export` line to `~/.profile`, `~/.bashrc`, or the active shell profile
-to make it persistent.
-
-macOS and Linux can choose another installation prefix:
-
-```bash
-./scripts/install.sh --prefix /opt/carbongate
-```
+Select hosts with `--host codex,claude` or choose another destination with
+`--prefix /opt/carbongate`.
 
 ### Windows
-
-Open PowerShell and confirm JDK 21:
-
-```powershell
-java -version
-javac -version
-```
-
-Clone and run the Windows installer:
 
 ```powershell
 git clone https://github.com/soya7700/CarbonGate.git
 Set-Location CarbonGate
-powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
-```
-
-Install and configure detected AI CLIs in one step with:
-
-```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Setup
-# Or only selected hosts:
-.\scripts\install.ps1 -Hosts "codex,claude"
-```
-
-The default command is:
-
-```text
-%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd
-```
-
-Use it immediately in the current PowerShell session:
-
-```powershell
 $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
-carbon version
+carbon doctor
 ```
 
-For future terminals, add `%LOCALAPPDATA%\CarbonGate\bin` to the user `Path`
-in Windows Environment Variables. A custom installation directory is supported:
+Use `-Hosts "codex,claude"` or `-Prefix "C:\Tools\CarbonGate"` as needed.
+Source installers compile locally, preserve existing configuration, and do not
+download build dependencies.
 
-```powershell
-.\scripts\install.ps1 -Prefix "C:\Tools\CarbonGate"
-```
+## 3. Local Agent and MCP integration
 
-The PowerShell installer compiles with the local JDK, creates `carbon.cmd`, and
-does not download additional dependencies. Source installers preserve existing
-configuration and support the same `--setup`/`-Setup` and host selection
-options as the recommended package installers.
+### CarbonGate Skill
 
-## 3. Integrate Codex, OpenClaw, or an MCP host
+When Codex is selected during setup, the bundled
+[CarbonGate Skill](skills/carbongate/SKILL.md) enables natural-language tasks
+such as:
 
-### Recommended: one-command CLI setup
+- “Show the latest blocked CarbonGate operations.”
+- “List pending approvals and active rules.”
+- “Switch CarbonGate to approval mode.”
+- “Protect this MCP server for my project.”
 
-The same command works on macOS, Linux, and Windows after `carbon` is on
-`PATH`:
+The Skill calls the local `carbon` CLI and reports actual coverage. It does not
+claim that a control-only connection protects host built-in tools.
+
+### Set up supported hosts
+
+The same commands work on macOS, Linux, and Windows:
 
 ```bash
-# Detect installed supported hosts and configure each one once
 carbon setup
-
-# Select hosts explicitly
 carbon setup --host codex,claude,openclaw
-
-# Preview without changing host configuration
 carbon setup --host codex --dry-run
-
-# Inspect and repair an installation
 carbon integrations list
 carbon doctor
 ```
 
-PowerShell uses the same arguments; invoke `carbon.cmd` if the installation
-directory has not yet been added to `Path`.
-
-The current automatic adapters are:
-
-| Host | Detected executable | Setup scope | Current coverage |
-|---|---|---|---|
-| OpenAI Codex CLI | `codex` | host user configuration | Control plane only |
-| Claude Code | `claude` | user | Control plane only |
-| OpenClaw | `openclaw` | host configuration | Control plane only |
-| Qoder CLI | `qodercli` | user | Control plane only |
-| CodeBuddy / WorkBuddy CLI | `codebuddy` | host configuration | Control plane only |
-| Gemini CLI | `gemini` | user | Control plane only |
-| GitHub Copilot CLI | `copilot` | host configuration | Control plane only |
-
-Hosts without a stable registration CLI use the guided catalog:
-
-| Target | Command | Result |
-|---|---|---|
-| Most local stdio MCP hosts | `carbon integrations export generic-stdio --format mcp-json` | Portable command/argument descriptor |
-| WorkBuddy desktop | `carbon integrations guide workbuddy-desktop` | UI steps plus an exportable stdio descriptor |
-| Coze / 扣子 cloud | `carbon integrations guide coze` | Explicit remote-transport requirement; no unsafe local config is generated |
-
-`carbon setup` registers the dependency-free `carbon mcp serve` control
-server under the stable name `carbongate`. It is idempotent: an entry already
-managed by CarbonGate is left unchanged. An existing same-name entry not owned
-by CarbonGate is reported as a conflict and never overwritten. A newly added
-entry is verified, and a failed verification is rolled back. Ownership is
-stored in `~/.carbongate/integrations/registry.json` (or the active
-`CARBON_HOME`). Remove only an owned entry with:
-
-```bash
-carbon integrations remove codex
-```
-
-Export commands are read-only and never edit host configuration:
+Automatic adapters currently cover Codex CLI, Claude Code, OpenClaw, Qoder,
+CodeBuddy/WorkBuddy CLI, Gemini CLI, and GitHub Copilot CLI. Guided descriptors
+are available for generic stdio MCP hosts, WorkBuddy desktop, and Coze/扣子:
 
 ```bash
 carbon integrations guide generic-stdio
-carbon integrations export generic-stdio --format descriptor
 carbon integrations export generic-stdio --format mcp-json
-carbon integrations export generic-stdio --format codex-toml
+carbon integrations guide coze
 ```
 
-After setup, a compatible host can answer requests such as “show CarbonGate
-blocked actions”, “list pending CarbonGate approvals”, or “switch CarbonGate
-to require approval every time”. The control server exposes status, rules,
-blocked events, approval/denial, and natural-language mode tools.
+Initial host setup is `CONTROL_ONLY`: it exposes status, rules, blocked events,
+approvals, and mode controls. Use a protected route for enforcement.
 
-> [!IMPORTANT]
-> Automatic setup in this version is `CONTROL_ONLY`. It makes CarbonGate
-> query and control tools available to the host; it does not automatically
-> intercept that host's built-in shell, file, or network tools. Route an MCP
-> server through the proxy below, use `carbon exec`, or integrate the Java/HTTP
-> API when enforcement is required.
+### Protect an MCP server
 
-GUI and cloud products without a stable local MCP registration CLI, including
-WorkBuddy desktop and Coze/扣子 environments, use their product's “Add MCP
-server” UI and the `carbon mcp serve` command. Their automatic adapters remain
-guided until a stable vendor CLI/config contract can be verified.
-
-### Protect an existing MCP server
-
-For Codex, the recommended reference workflow is the bundled CarbonGate Skill.
-It inspects the intended upstream command and calls the same atomic CLI flow:
+The Skill's recommended atomic workflow is:
 
 ```bash
 carbon protect /absolute/project/path --name filesystem --host codex -- npx some-mcp-server
@@ -354,296 +221,72 @@ carbon protections
 carbon unprotect filesystem --host codex
 ```
 
-The command refuses unmanaged same-name entries, verifies the Codex
-registration, and rolls back the MCP profile when verification fails. Preview
-without writing CarbonGate or host state with `--dry-run`.
+Use `--host generic` to store a protected route and receive a portable
+descriptor without claiming to modify an unsupported host.
 
-For any generic stdio MCP host, use `--host generic`. CarbonGate stores the
-protected route and returns a portable descriptor but does not claim to edit
-the host:
-
-```bash
-carbon protect /absolute/project/path --name filesystem --host generic -- npx some-mcp-server
-```
-
-The recommended MCP enforcement path is a reusable protected route. Create it
-once, then export a small descriptor for Codex, OpenClaw, WorkBuddy, or any
-other local stdio MCP host:
+The lower-level reusable profile workflow is:
 
 ```bash
 carbon mcp profile add filesystem \
   --workspace /absolute/project/path \
   -- npx some-mcp-server
-carbon mcp profile list
 carbon mcp profile show filesystem
 carbon mcp profile export filesystem --format mcp-json
 ```
 
-On Windows, use the same commands in PowerShell with a Windows workspace path
-and the upstream Windows launcher, such as `npx.cmd`. The exported host entry
-runs `carbon mcp profile run filesystem`; every upstream `tools/call` therefore
-passes through CarbonGate. `descriptor`, `mcp-json`, and `codex-toml` exports
-are available, are read-only, and explicitly report `mcp_only` coverage.
+On Windows use a Windows workspace path and launchers such as `npx.cmd`.
+Exported entries run `carbon mcp profile run filesystem`, so upstream
+`tools/call` requests pass through CarbonGate and report `mcp_only` coverage.
 
-Profiles are stored atomically in
-`$CARBON_HOME/mcp/profiles.json` (normally
-`~/.carbongate/mcp/profiles.json`). The registry is capped at 100 profiles and
-1 MiB. It is compact configuration state, not an event log, so it does not
-consume the daily 10 MB local log budget. CarbonGate rejects secret-like
-command arguments and credential options such as `--token` or `--api-key`;
-provide credentials through the upstream process environment instead.
+Profiles are written atomically to `$CARBON_HOME/mcp/profiles.json`, capped at
+100 profiles and 1 MiB, and do not consume the daily event-log budget. Secret
+arguments such as `--token` and `--api-key` are rejected; supply credentials
+through the upstream process environment.
 
-Manage a route without editing host configuration:
-
-```bash
-carbon mcp profile export filesystem --format descriptor
-carbon mcp profile export filesystem --format codex-toml
-carbon mcp profile remove filesystem
-```
-
-For temporary or scripted use, CarbonGate can also wrap an existing stdio MCP
-server directly. Put the original server command after `--`:
+For temporary use:
 
 ```text
 carbon mcp proxy --workspace /absolute/project/path -- ORIGINAL_SERVER [ARGS...]
 ```
 
-Generic MCP configuration for macOS or Linux:
+`carbon run --workspace /project -- your-agent` only provides CarbonGate
+connection metadata. It is not an operating-system sandbox and cannot stop a
+child process from bypassing CarbonGate.
 
-```json
-{
-  "mcpServers": {
-    "filesystem": {
-      "command": "/absolute/path/to/carbon",
-      "args": [
-        "mcp",
-        "proxy",
-        "--workspace",
-        "/absolute/path/to/project",
-        "--",
-        "npx",
-        "some-mcp-server"
-      ]
-    }
-  }
-}
-```
+## 4. Core control and configuration
 
-On Windows, use the command launcher and Windows paths:
-
-```json
-{
-  "mcpServers": {
-    "filesystem": {
-      "command": "C:\\Users\\YOU\\AppData\\Local\\CarbonGate\\bin\\carbon.cmd",
-      "args": [
-        "mcp",
-        "proxy",
-        "--workspace",
-        "C:\\work\\project",
-        "--",
-        "npx.cmd",
-        "some-mcp-server"
-      ]
-    }
-  }
-}
-```
-
-Use this proxy entry in Codex, OpenClaw, or any other stdio MCP host instead of
-the original MCP server entry. CarbonGate evaluates `tools/call` before
-forwarding it.
-
-Warnings appear in the host-captured `stderr` stream or tool response. When an
-operation requires manual approval:
+### Everyday commands
 
 ```bash
-carbon approvals list
-carbon approvals approve <id>
-```
-
-The Agent must retry the exact same operation. Approval is consumed once and
-expires after 24 hours. Reject a pending request with:
-
-```bash
-carbon approvals deny <id>
-```
-
-Compatible Agents can also receive CarbonGate connection metadata through:
-
-```bash
-carbon run --workspace /path/to/project -- your-agent-command
-```
-
-This injects `CARBON_ENDPOINT`, `CARBON_WORKSPACE`, `CARBON_PROFILE`, and
-`CARBON_MODE`. It does not stop a child process from bypassing CarbonGate.
-
-## 4. Integrate a Java 21 application
-
-CarbonGate is not currently published to a public Maven repository. Build the
-JAR from source:
-
-```bash
-./scripts/build.sh
-# build/carbongate.jar
-```
-
-On Windows, `scripts\install.ps1` also produces `build\carbongate.jar`.
-
-### Gradle
-
-Copy the JAR into the application's `libs/` directory:
-
-```kotlin
-dependencies {
-    implementation(files("libs/carbongate.jar"))
-}
-```
-
-### Maven
-
-Install the JAR into the local Maven repository:
-
-```bash
-mvn install:install-file \
-  -Dfile=/absolute/path/to/carbongate.jar \
-  -DgroupId=io.carbongate \
-  -DartifactId=carbongate \
-  -Dversion=0.2.0 \
-  -Dpackaging=jar
-```
-
-Add the dependency:
-
-```xml
-<dependency>
-  <groupId>io.carbongate</groupId>
-  <artifactId>carbongate</artifactId>
-  <version>0.2.0</version>
-</dependency>
-```
-
-### Recommended: sidecar gateway
-
-Start CarbonGate separately:
-
-```bash
-CARBON_HOME=/var/lib/carbongate \
-  carbon gateway --profile strict --port 8765 --workspace /srv/app/workspace
-```
-
-Call the gateway from Java:
-
-```java
-import io.carbongate.model.Action;
-import io.carbongate.model.Decision;
-import io.carbongate.sdk.CarbonGateClient;
-
-import java.net.URI;
-import java.nio.file.Path;
-
-try (var client = new CarbonGateClient(URI.create("http://127.0.0.1:8765"))) {
-    var result = client.evaluate(Action.shell("git status", Path.of("/srv/app/workspace")));
-    if (result.decision() != Decision.ALLOW) {
-        throw new SecurityException(result.reason());
-    }
-    // Execute the real operation only after ALLOW.
-}
-```
-
-The gateway listens on `127.0.0.1` and has no remote authentication. Do not
-expose it directly to a network.
-
-### In-process gateway
-
-```java
-import io.carbongate.model.Action;
-import io.carbongate.model.Decision;
-import io.carbongate.policy.PolicyProfile;
-import io.carbongate.runtime.CarbonGateRuntime;
-
-import java.nio.file.Path;
-
-var runtime = CarbonGateRuntime.fromConfig(
-        Path.of("/var/lib/carbongate"),
-        PolicyProfile.STRICT
-);
-var result = runtime.guard().evaluate(
-        Action.shell("git status", Path.of("/srv/app/workspace"))
-);
-if (result.decision() == Decision.ALLOW) {
-    // Execute the real operation.
-}
-```
-
-Application code must evaluate the action before performing it and proceed only
-for `Decision.ALLOW`. `ASK` is not permission.
-
-### Enterprise detailed audit
-
-```java
-var runtime = CarbonGateRuntime.enterprise(
-        Path.of("/var/lib/carbongate"),
-        Path.of("/var/log/company/carbongate"),
-        PolicyProfile.STRICT,
-        100_000_000L
-);
-```
-
-Enterprise mode records detailed allow, ask, approval, deny, and internal-error
-events. Required audit write failures fail closed and return `DENY`. Implement
-`AuditSink` to send events to an existing SIEM, database, or logging platform.
-
-## 5. Configure and operate CarbonGate
-
-### Core commands
-
-```text
 carbon status
 carbon rules
-carbon config init|show|path|set <key> <value>
-carbon blocked [--limit 20]
-carbon approvals list|approve <id>|deny <id>
-carbon mode show|set <natural-language level>
-carbon control "natural-language level instruction"
-carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]
-carbon protect [WORKSPACE] --name NAME [--host codex|generic] [--dry-run] -- SERVER [ARGS...]
-carbon protections [list]
-carbon unprotect <name> [--host codex|generic]
-carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]
-carbon doctor
-carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
-carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
-carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
-carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
-carbon mcp serve
-carbon mcp profile list|show <name>|add <name> [--workspace PATH] [--replace] -- SERVER [ARGS...]
-carbon mcp profile remove|run <name>|export <name> [--format FORMAT]
-carbon redact TEXT
-carbon run [--workspace PATH] -- AGENT [ARGS...]
-carbon version
-```
-
-Examples:
-
-```bash
-carbon check --workspace /path/to/project -- 'git status'
-carbon exec --workspace /path/to/project -- 'touch result.txt'
 carbon blocked --limit 20
+carbon approvals list
+carbon approvals approve <id>
+carbon approvals deny <id>
 carbon control "require approval every time"
 carbon control "restore balanced mode"
+carbon doctor
 ```
 
-### Configuration file
+An approved operation must be retried exactly; approval is single-use and
+expires after 24 hours.
 
-The default file is `~/.carbongate/carbon.conf` on macOS/Linux and
-`%USERPROFILE%\.carbongate\carbon.conf` on Windows. Query the active path with:
+### Enforcement modes
 
-```bash
-carbon config path
-```
+| Mode | Behavior |
+|---|---|
+| `BALANCED` | Risk-based allow, ask, or deny |
+| `WARN` | Warn but allow |
+| `APPROVAL` | Ask for every operation |
+| `BLOCK` | Deny every Agent operation |
 
-Complete configuration:
+Natural-language mode control accepts English or Chinese intent.
+
+### Configuration
+
+The default file is `~/.carbongate/carbon.conf` or
+`%USERPROFILE%\.carbongate\carbon.conf`:
 
 ```properties
 mode=BALANCED
@@ -658,79 +301,185 @@ audit.enterprise.dailyLimitBytes=100000000
 alerts.consoleDailyLimit=100
 ```
 
-| Key | Default | Description |
-|---|---:|---|
-| `mode` | `BALANCED` | `BALANCED`, `WARN`, `APPROVAL`, or `BLOCK` |
-| `rules.shell.enabled` | `true` | Shell command risk rules |
-| `rules.filesystem.enabled` | `true` | File boundary and path-risk rules |
-| `rules.network.enabled` | `true` | Network egress risk rules |
-| `rules.secrets.enabled` | `true` | Sensitive-data risk rules; baseline redaction still applies |
-| `audit.mode` | `LOCAL_MINIMAL` | `LOCAL_MINIMAL` or `ENTERPRISE_DETAILED` |
-| `audit.local.dailyLimitBytes` | `10000000` | Combined local daily hard cap, maximum 10,000,000 bytes |
-| `audit.enterprise.directory` | `enterprise-audit` | Enterprise directory; relative to `CARBON_HOME` |
-| `audit.enterprise.dailyLimitBytes` | `100000000` | Enterprise daily safety cap |
-| `alerts.consoleDailyLimit` | `100` | Console warning limit for a long-running MCP proxy |
-
-Change a value with:
+Manage it through validated commands:
 
 ```bash
+carbon config path
+carbon config show
 carbon config set rules.network.enabled false
 carbon config set audit.local.dailyLimitBytes 10000000
-carbon config set audit.mode ENTERPRISE_DETAILED
 ```
 
-Rule and `mode` changes apply to the next Tool Call. Audit mode, directory, and
-capacity changes require a restart of long-running gateways or MCP proxies.
-Unknown keys and invalid values are rejected.
+### Local logging
 
-### Enforcement modes
+Local CLI and Agent installations default to `LOCAL_MINIMAL`:
 
-| Mode | Behavior |
-|---|---|
-| `BALANCED` | Allow, ask, or deny according to risk |
-| `WARN` | Report risk but allow the operation |
-| `APPROVAL` | Require one-time human approval for every operation |
-| `BLOCK` | Deny all Agent operations |
+- only complete blocks and internal errors are persisted;
+- allow, warning, and pending-approval events are not written;
+- blocked and error records share a hard 10,000,000-byte daily limit;
+- every compact record is at most 1,024 bytes and is redacted before writing.
 
-Natural-language control accepts Chinese or English intent:
+See [control, approval, and logging](docs/control-and-logging.md).
+
+## 5. Enterprise components
+
+Enterprise products are optional and built separately from Core. They use the
+bounded stdio component protocol and run outside the Core JVM.
+
+### Component catalog
+
+| Component | Type | Function | Documentation |
+|---|---|---|---|
+| Sensitive Data Baseline | Pack | Personal identity/contact/family and enterprise finance/member-asset rules | [Rule Packs](docs/rule-packs.md) |
+| Sensitive Data Provider | Provider / `inspect` | DLP findings without returning matched content | [DLP Provider](docs/sensitive-data-provider.md) |
+| Approval Policy Provider | Provider / `authorize` | Stable `allow`, `ask`, and `deny` policy | [Approval Provider](docs/approval-provider.md) |
+| Container Sandbox | Sandbox / `sandbox` | Docker/Podman default-deny execution | [Container Sandbox](docs/container-sandbox.md) |
+| Enterprise Audit Provider | Provider / `audit` | Sanitized, bounded, SHA-256 chained JSONL audit | [Audit Provider](docs/enterprise-audit-provider.md) |
+
+The lifecycle and protocol are documented in
+[Enterprise Component Host](docs/enterprise-components.md).
+
+### Build
+
+macOS and Linux:
 
 ```bash
-carbon control "switch to warn mode"
-carbon control "require approval every time"
-carbon control "block all operations"
-carbon control "restore balanced mode"
+./scripts/build-enterprise.sh
+./scripts/build-pack.sh
+./scripts/build-provider.sh
+./scripts/build-approval.sh
+./scripts/build-audit.sh
+./scripts/build-sandbox.sh
 ```
 
-`--profile strict|balanced|audit` controls how risk maps to decisions; `mode` is
-the global runtime control level.
+Windows PowerShell uses the matching `.ps1` scripts:
 
-### Installation health check
+```powershell
+.\scripts\build-enterprise.ps1
+.\scripts\build-pack.ps1
+.\scripts\build-provider.ps1
+.\scripts\build-approval.ps1
+.\scripts\build-audit.ps1
+.\scripts\build-sandbox.ps1
+```
 
-`carbon doctor` reports one machine-readable result covering the running Java
-version, CarbonGate state directory, configuration, 10 MB local log cap,
-control-server invocation, integration registry, and every detected host. It
-returns a non-zero status for a broken managed registration, an external
-same-name conflict, a missing JAR, an unreadable registry, or another failed
-system check. Missing optional hosts are informational.
+### Install and enable
 
-### Logging and alerts
+```bash
+./build/carbon-enterprise install build/sensitive-data-baseline-1.0.0.carbon
+./build/carbon-enterprise enable sensitive-data-baseline 1.0.0
+./build/carbon-enterprise install build/sensitive-data-provider-1.0.0.carbon
+./build/carbon-enterprise enable sensitive-data-provider 1.0.0
+./build/carbon-enterprise install build/approval-policy-provider-1.0.0.carbon
+./build/carbon-enterprise enable approval-policy-provider 1.0.0
+./build/carbon-enterprise install build/enterprise-audit-provider-1.0.0.carbon
+./build/carbon-enterprise enable enterprise-audit-provider 1.0.0
+./build/carbon-enterprise doctor
+```
 
-Local CLI, Codex, and OpenClaw installations default to `LOCAL_MINIMAL`:
+Install the Container Sandbox separately and enable it only when Docker or
+Podman is available. It requires a locally available digest-pinned image,
+disables pulling and networking, and uses a read-only workspace by default.
 
-- Only complete blocks and internal errors are persisted
-- Allow, warning, and pending-approval events are not written
-- Blocked and error files share a 10,000,000-byte daily hard cap
-- Each record is at most 1,024 bytes and long text is truncated after redaction
-- `carbon status` reports the active log paths and current usage
+### Guard Pipeline
 
-Enterprise Java services can explicitly use `ENTERPRISE_DETAILED` for complete
-security-decision and approval auditing. See
-[control, approval, and logging](docs/control-and-logging.md).
+The explicit pipeline is:
 
-## Security and development
+```text
+inspect -> authorize -> sandbox (only after allow) -> audit
+```
 
-Read the [threat model](docs/threat-model.md) before treating CarbonGate as a
-security boundary. Report suspected vulnerabilities through
+```bash
+./build/carbon-enterprise guard \
+  '{"action":"read","risk":"low","content":"text to inspect"}'
+```
+
+`fail_closed` changes the result to `deny`; `fail_open` remains visible as a
+failed step. Audit receives only a generated event ID, action, risk, decision,
+and component names. See [Enterprise Guard Pipeline](docs/enterprise-pipeline.md).
+
+### Custom Packs
+
+Pack rules are declarative and cannot execute code or supply arbitrary regular
+expressions. A simple keyword rule looks like:
+
+```json
+{
+  "id": "company.internal-label",
+  "audience": "enterprise",
+  "category": "enterprise.internal",
+  "severity": "high",
+  "match": {"type": "keywords", "terms": ["internal-only"]}
+}
+```
+
+Fixed detectors include `email`, `phone_cn`, `id_cn`, `bank_card`, and
+`api_secret`.
+
+### Component signing
+
+Use JDK 21's Ed25519 implementation to authenticate publishers:
+
+```bash
+./build/carbon-enterprise trust generate company-release /secure/keys
+./build/carbon-enterprise trust add company-release /secure/keys/company-release.public.x509
+./build/carbon-enterprise package source component.carbon \
+  --sign company-release /secure/keys/company-release.private.pk8
+./build/carbon-enterprise trust policy require_signed
+```
+
+Private keys are never packaged. Details are in
+[component signing and trust](docs/component-trust.md).
+
+## 6. Java 21 application integration
+
+Build `build/carbongate.jar` with `./scripts/build.sh`. CarbonGate is not yet
+published to a public Maven repository; use the JAR directly or install it into
+your approved internal repository.
+
+### Recommended sidecar
+
+```bash
+CARBON_HOME=/var/lib/carbongate \
+  carbon gateway --profile strict --port 8765 --workspace /srv/app/workspace
+```
+
+```java
+try (var client = new CarbonGateClient(URI.create("http://127.0.0.1:8765"))) {
+    var result = client.evaluate(Action.shell("git status", Path.of("/srv/app/workspace")));
+    if (result.decision() != Decision.ALLOW) {
+        throw new SecurityException(result.reason());
+    }
+}
+```
+
+The gateway binds to `127.0.0.1` and has no remote authentication. Never expose
+it directly to a network.
+
+### In-process
+
+```java
+var runtime = CarbonGateRuntime.fromConfig(
+        Path.of("/var/lib/carbongate"), PolicyProfile.STRICT);
+var result = runtime.guard().evaluate(
+        Action.shell("git status", Path.of("/srv/app/workspace")));
+if (result.decision() == Decision.ALLOW) {
+    // Execute the real operation.
+}
+```
+
+Application code must evaluate before execution. `ASK` is not permission.
+Enterprise Java services can use `CarbonGateRuntime.enterprise(...)` or a
+custom `AuditSink`; this is separate from the optional component pipeline.
+
+## 7. Security, verification, and license
+
+CarbonGate is an early-stage security project, not transparent syscall
+interception. Core file checks do not create a mount namespace or Chroot.
+Hostile workloads still require a correctly configured container or operating
+system sandbox.
+
+Read the [threat model](docs/threat-model.md) and report vulnerabilities through
 [SECURITY.md](SECURITY.md).
 
 Run the complete verification suite:
@@ -739,20 +488,11 @@ Run the complete verification suite:
 ./scripts/verify.sh
 ```
 
-Other development commands:
+It compiles with `--release 21 -Xlint:all -Werror`, tests Core and every optional
+component, validates installers and packages, checks size budgets, and rejects
+undeclared dependencies.
 
-```bash
-./scripts/test.sh
-./scripts/build.sh
-./scripts/functional-test.sh
-./scripts/package.sh 0.2.0
-```
-
-Packaging produces `carbongate-0.2.0.tar.gz` and
-`carbongate-0.2.0.zip`. `scripts/package-test.sh` verifies that both contain
-the platform launchers, package installers, documentation, configuration, and
-license notices.
-
-CarbonGate is licensed under the [Apache License 2.0](LICENSE). Distributed
-artifacts must follow the [dependency and license policy](docs/dependency-policy.md)
-and keep [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) current.
+CarbonGate is licensed under the [Apache License 2.0](LICENSE). Contributions
+and distributed artifacts must follow the
+[dependency and license policy](docs/dependency-policy.md) and keep
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) current.
