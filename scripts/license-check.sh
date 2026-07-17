@@ -22,4 +22,15 @@ if test -n "$imports"; then
   exit 1
 fi
 
-printf 'License check passed: no third-party Java imports or bundled source binaries.\n'
+if test -d "$ROOT/.github/workflows"; then
+  workflow_uses=$(grep -RhoE 'uses:[[:space:]]+[^[:space:]]+' "$ROOT/.github/workflows" | \
+    sed 's/^uses:[[:space:]]*//' || true)
+  unapproved=$(printf '%s\n' "$workflow_uses" | grep -Ev \
+    '^(actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5|actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9)$' || true)
+  if test -n "$unapproved"; then
+    printf 'Unapproved or unpinned GitHub Actions detected:\n%s\n' "$unapproved" >&2
+    exit 1
+  fi
+fi
+
+printf 'License check passed: no undeclared Java, binary, or CI dependencies.\n'
