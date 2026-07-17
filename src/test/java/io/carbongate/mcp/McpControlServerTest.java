@@ -30,6 +30,8 @@ public final class McpControlServerTest {
         assert toolsJson.contains("carbon_rules");
         assert toolsJson.contains("carbon_set_mode");
         assert toolsJson.contains("carbon_approve");
+        assert toolsJson.contains("carbon_integration_guide");
+        assert toolsJson.contains("carbon_doctor");
 
         Map<String, Object> status = call(server, 3, "carbon_status", Map.of());
         assert Json.stringify(status).contains("dailyLogByteLimit");
@@ -42,6 +44,13 @@ public final class McpControlServerTest {
 
         Map<String, Object> rules = call(server, 5, "carbon_rules", Map.of());
         assert Json.stringify(rules).contains("shellRules");
+
+        Map<String, Object> guide = call(server, 51, "carbon_integration_guide",
+                Map.of("host", "workbuddy-desktop"));
+        assert Json.stringify(guide).contains("guided");
+        Map<String, Object> coze = call(server, 52, "carbon_integration_export",
+                Map.of("host", "coze"));
+        assert Json.stringify(coze).contains("remoteTransportRequired");
 
         Map<String, Object> invalid = server.handle(Map.of(
                 "jsonrpc", "2.0", "id", 6L, "method", "tools/call",

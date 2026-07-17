@@ -1,5 +1,12 @@
 package io.carbongate.mcp;
 
+import io.carbongate.integration.HostCatalog;
+import io.carbongate.integration.InstallationDoctor;
+import io.carbongate.integration.IntegrationGuideService;
+import io.carbongate.integration.IntegrationInvocation;
+import io.carbongate.integration.IntegrationManager;
+import io.carbongate.integration.IntegrationRegistry;
+import io.carbongate.integration.SystemCommandRunner;
 import io.carbongate.json.Json;
 import io.carbongate.policy.PolicyProfile;
 import io.carbongate.runtime.ControlService;
@@ -17,9 +24,16 @@ import java.util.Map;
 public final class McpControlServer {
     private static final String PROTOCOL_VERSION = "2024-11-05";
     private final ControlService controls;
+    private final IntegrationGuideService guides;
+    private final InstallationDoctor doctor;
 
     public McpControlServer(Path home, PolicyProfile profile) {
         controls = new ControlService(home, profile);
+        List<String> invocation = IntegrationInvocation.current();
+        IntegrationManager integrations = new IntegrationManager(new IntegrationRegistry(home),
+                new SystemCommandRunner(), HostCatalog.all(), invocation);
+        guides = new IntegrationGuideService(invocation);
+        doctor = new InstallationDoctor(home, integrations, invocation);
     }
 
     public int run() throws IOException {
@@ -74,6 +88,11 @@ public final class McpControlServer {
             case "carbon_approve" -> controls.approve(string(arguments, "id"));
             case "carbon_deny_approval" -> controls.deny(string(arguments, "id"));
             case "carbon_set_mode" -> controls.setMode(string(arguments, "instruction"));
+            case "carbon_integrations" -> Map.of("targets", guides.catalog());
+            case "carbon_integration_guide" -> guides.guide(string(arguments, "host"));
+            case "carbon_integration_export" -> guides.export(string(arguments, "host"),
+                    arguments.get("format") instanceof String format ? format : "descriptor");
+            case "carbon_doctor" -> diagnose();
             default -> throw new IllegalArgumentException("Unknown CarbonGate tool: " + name);
         };
         return Map.of("content", List.of(Map.of("type", "text", "text", Json.stringify(value))),
@@ -92,7 +111,13 @@ public final class McpControlServer {
                 tool("carbon_deny_approval", "Deny and remove one pending approval",
                         requiredSchema("id", "string")),
                 tool("carbon_set_mode", "Switch CarbonGate level using natural language, for example 警告提醒、每次授权、全部禁止 or 平衡模式",
-                        requiredSchema("instruction", "string")));
+                        requiredSchema("instruction", "string")),
+                tool("carbon_integrations", "List automatic and guided CarbonGate host integration targets", schema()),
+                tool("carbon_integration_guide", "Explain how to integrate CarbonGate with a named CLI, desktop, generic stdio, or cloud host",
+                        requiredSchema("host", "string")),
+                tool("carbon_integration_export", "Export a local stdio MCP descriptor without modifying host configuration",
+                        exportSchema()),
+                tool("carbon_doctor", "Check JDK, configuration, log budget, registry, invocation, and host integration health", schema()));
     }
 
     private Map<String, Object> tool(String name, String description, Map<String, Object> inputSchema) {
@@ -111,6 +136,23 @@ public final class McpControlServer {
         Map<String, Object> value = new LinkedHashMap<>(schema(Map.of(name, Map.of("type", type))));
         value.put("required", List.of(name));
         return value;
+    }
+
+    private Map<String, Object> exportSchema() {
+        Map<String, Object> value = new LinkedHashMap<>(schema(Map.of(
+                "host", Map.of("type", "string"),
+                "format", Map.of("type", "string", "enum", List.of("descriptor", "mcp-json", "codex-toml")))));
+        value.put("required", List.of("host"));
+        return value;
+    }
+
+    private Map<String, Object> diagnose() throws IOException {
+        try {
+            return doctor.diagnose();
+        } catch (InterruptedException error) {
+            Thread.currentThread().interrupt();
+            throw new IOException("CarbonGate doctor was interrupted", error);
+        }
     }
 
     private Map<String, Object> success(Object id, Object result) {

@@ -21,7 +21,9 @@ mkdir -p "$LINT_OUT/classes"
 javac --release 21 -Xlint:all -Werror -encoding UTF-8 -d "$LINT_OUT/classes" @"$LINT_OUT/sources.txt"
 
 "$ROOT/scripts/test.sh"
+"$ROOT/scripts/docs-test.sh"
 "$ROOT/scripts/build.sh"
 "$ROOT/scripts/functional-test.sh"
+"$ROOT/scripts/package-test.sh"
 
 printf 'Complete CarbonGate verification passed on Java %s.\n' "$java_spec"

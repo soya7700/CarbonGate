@@ -12,9 +12,10 @@ approval for risky operations.
 
 | Goal | Start here |
 |---|---|
-| Protect commands on a developer machine | [Install the CLI](#1-install-the-cli) |
-| Protect Codex, OpenClaw, or another MCP host | [Agent and MCP integration](#2-integrate-codex-openclaw-or-an-mcp-host) |
-| Add checks to a Java 21 application | [Java integration](#3-integrate-a-java-21-application) |
+| Protect commands on a developer machine | [Recommended one-command install](#1-recommended-one-command-installation) |
+| Build or modify CarbonGate itself | [Install from source](#2-alternative-install-from-source) |
+| Protect Codex, OpenClaw, or another MCP host | [Agent and MCP integration](#3-integrate-codex-openclaw-or-an-mcp-host) |
+| Add checks to a Java 21 application | [Java integration](#4-integrate-a-java-21-application) |
 | Enable detailed enterprise audit | [Enterprise audit](#enterprise-detailed-audit) |
 
 ## What CarbonGate provides
@@ -38,13 +39,104 @@ mount-namespace or Chroot filesystem virtualization are not implemented yet.
 
 ## Requirements
 
-- JDK 21 or newer (`java`, `javac`, and `jar` must be available)
-- Git when installing from source
+- Java 21 or newer (`java`) for the recommended prebuilt installation
+- JDK 21 or newer (`java`, `javac`, and `jar`) plus Git only when installing from source
 - macOS, Linux, or Windows PowerShell 5.1+
 
 The runtime has no third-party source or runtime dependencies.
 
-## 1. Install the CLI
+## 1. Recommended: one-command installation
+
+Use a prebuilt CarbonGate archive for normal CLI, Codex, Claude Code,
+OpenClaw, Qoder, CodeBuddy, Gemini CLI, or Copilot CLI installations. This is
+the recommended path because it does not compile source and needs only Java 21.
+
+Download and extract the `.tar.gz` package on macOS/Linux or the `.zip` package
+on Windows. Both packages contain the same tested JAR, configuration,
+documentation, license notices, and platform launchers.
+
+### macOS and Linux
+
+Run the packaged installer from the extracted directory:
+
+```bash
+./carbongate-VERSION/install.sh --setup
+```
+
+To configure only selected AI CLIs:
+
+```bash
+./carbongate-VERSION/install.sh --host codex,claude,openclaw
+```
+
+The default command is `~/.local/bin/carbon`. If it is not already on `PATH`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### Windows
+
+Open PowerShell in the extracted directory and run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION\install.ps1 -Setup
+```
+
+To configure only selected AI CLIs:
+
+```powershell
+.\carbongate-VERSION\install.ps1 -Host "codex,claude,openclaw"
+```
+
+The default launcher is
+`%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd`. Use it immediately with:
+
+```powershell
+$env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
+```
+
+### What the installer guarantees
+
+- Verifies that Java can run the JDK 21-targeted CarbonGate JAR
+- Installs only the packaged JAR and a small platform launcher
+- Initializes `carbon.conf` only when it does not already exist
+- Uses idempotent host registration and never duplicates a managed entry
+- Refuses to overwrite an external same-name `carbongate` MCP entry
+- Verifies each registration and rolls it back if verification fails
+- Downloads no runtime dependencies and adds no background service
+
+Use `--prefix PATH` on macOS/Linux or `-Prefix PATH` on Windows to choose
+another installation directory. Omit `--setup`/`-Setup` when CarbonGate should
+be installed without changing any AI host configuration.
+
+### Installation layout
+
+| Item | macOS/Linux default | Windows default |
+|---|---|---|
+| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd` |
+| JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
+| State and configuration | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
+
+Override the state directory on every platform with `CARBON_HOME`.
+
+### Verify the installation
+
+```bash
+carbon version
+carbon doctor
+carbon status
+carbon rules
+```
+
+`carbon doctor` checks Java, the state directory, configuration validity, the
+10 MB local daily log cap, packaged JAR, integration registry, and detected
+hosts in one machine-readable result.
+
+## 2. Alternative: install from source
+
+Use the source path when developing CarbonGate, testing a branch, or changing
+the Java implementation. It requires Git and a full JDK 21 toolchain.
 
 ### macOS
 
@@ -60,8 +152,11 @@ Clone and install for the current user:
 ```bash
 git clone https://github.com/soya7700/CarbonGate.git
 cd CarbonGate
-./scripts/install.sh
+./scripts/install.sh --setup
 ```
+
+`--setup` detects supported local AI CLIs and registers CarbonGate once. Limit
+the operation to selected hosts with `--host codex,claude`.
 
 The default command is `~/.local/bin/carbon`. Add it to the current shell when
 needed:
@@ -89,7 +184,7 @@ Clone and install:
 ```bash
 git clone https://github.com/soya7700/CarbonGate.git
 cd CarbonGate
-./scripts/install.sh
+./scripts/install.sh --setup
 export PATH="$HOME/.local/bin:$PATH"
 carbon version
 ```
@@ -120,6 +215,14 @@ Set-Location CarbonGate
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
+Install and configure detected AI CLIs in one step with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Setup
+# Or only selected hosts:
+.\scripts\install.ps1 -Host "codex,claude"
+```
+
 The default command is:
 
 ```text
@@ -141,31 +244,11 @@ in Windows Environment Variables. A custom installation directory is supported:
 ```
 
 The PowerShell installer compiles with the local JDK, creates `carbon.cmd`, and
-does not download additional dependencies.
+does not download additional dependencies. Source installers preserve existing
+configuration and support the same `--setup`/`-Setup` and host selection
+options as the recommended package installers.
 
-### Installation layout
-
-| Item | macOS/Linux default | Windows default |
-|---|---|---|
-| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd` |
-| JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
-| State and configuration | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
-
-Override the state directory on every platform with `CARBON_HOME`.
-
-### Verify the installation
-
-```bash
-carbon version
-carbon config init
-carbon status
-carbon rules
-```
-
-The installer initializes configuration only when it does not exist and never
-overwrites an existing `carbon.conf`.
-
-## 2. Integrate Codex, OpenClaw, or an MCP host
+## 3. Integrate Codex, OpenClaw, or an MCP host
 
 ### Recommended: one-command CLI setup
 
@@ -202,6 +285,14 @@ The current automatic adapters are:
 | Gemini CLI | `gemini` | user | Control plane only |
 | GitHub Copilot CLI | `copilot` | host configuration | Control plane only |
 
+Hosts without a stable registration CLI use the guided catalog:
+
+| Target | Command | Result |
+|---|---|---|
+| Most local stdio MCP hosts | `carbon integrations export generic-stdio --format mcp-json` | Portable command/argument descriptor |
+| WorkBuddy desktop | `carbon integrations guide workbuddy-desktop` | UI steps plus an exportable stdio descriptor |
+| Coze / 扣子 cloud | `carbon integrations guide coze` | Explicit remote-transport requirement; no unsafe local config is generated |
+
 `carbon setup` registers the dependency-free `carbon mcp serve` control
 server under the stable name `carbongate`. It is idempotent: an entry already
 managed by CarbonGate is left unchanged. An existing same-name entry not owned
@@ -212,6 +303,15 @@ stored in `~/.carbongate/integrations/registry.json` (or the active
 
 ```bash
 carbon integrations remove codex
+```
+
+Export commands are read-only and never edit host configuration:
+
+```bash
+carbon integrations guide generic-stdio
+carbon integrations export generic-stdio --format descriptor
+carbon integrations export generic-stdio --format mcp-json
+carbon integrations export generic-stdio --format codex-toml
 ```
 
 After setup, a compatible host can answer requests such as “show CarbonGate
@@ -310,7 +410,7 @@ carbon run --workspace /path/to/project -- your-agent-command
 This injects `CARBON_ENDPOINT`, `CARBON_WORKSPACE`, `CARBON_PROFILE`, and
 `CARBON_MODE`. It does not stop a child process from bypassing CarbonGate.
 
-## 3. Integrate a Java 21 application
+## 4. Integrate a Java 21 application
 
 CarbonGate is not currently published to a public Maven repository. Build the
 JAR from source:
@@ -426,7 +526,7 @@ Enterprise mode records detailed allow, ask, approval, deny, and internal-error
 events. Required audit write failures fail closed and return `DENY`. Implement
 `AuditSink` to send events to an existing SIEM, database, or logging platform.
 
-## 4. Configure and operate CarbonGate
+## 5. Configure and operate CarbonGate
 
 ### Core commands
 
@@ -439,7 +539,7 @@ carbon approvals list|approve <id>|deny <id>
 carbon mode show|set <natural-language level>
 carbon control "natural-language level instruction"
 carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]
-carbon integrations list|remove <host>
+carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]
 carbon doctor
 carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
 carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
@@ -531,6 +631,15 @@ carbon control "restore balanced mode"
 `--profile strict|balanced|audit` controls how risk maps to decisions; `mode` is
 the global runtime control level.
 
+### Installation health check
+
+`carbon doctor` reports one machine-readable result covering the running Java
+version, CarbonGate state directory, configuration, 10 MB local log cap,
+control-server invocation, integration registry, and every detected host. It
+returns a non-zero status for a broken managed registration, an external
+same-name conflict, a missing JAR, an unreadable registry, or another failed
+system check. Missing optional hosts are informational.
+
 ### Logging and alerts
 
 Local CLI, Codex, and OpenClaw installations default to `LOCAL_MINIMAL`:
@@ -565,6 +674,11 @@ Other development commands:
 ./scripts/functional-test.sh
 ./scripts/package.sh 0.2.0
 ```
+
+Packaging produces `carbongate-0.2.0.tar.gz` and
+`carbongate-0.2.0.zip`. `scripts/package-test.sh` verifies that both contain
+the platform launchers, package installers, documentation, configuration, and
+license notices.
 
 CarbonGate is licensed under the [Apache License 2.0](LICENSE). Distributed
 artifacts must follow the [dependency and license policy](docs/dependency-policy.md)

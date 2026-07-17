@@ -11,8 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class SettingsStore {
     public static final String MODE = "mode";
@@ -85,6 +87,35 @@ public final class SettingsStore {
 
     public Map<String, String> snapshot() {
         return Map.copyOf(values());
+    }
+
+    public List<String> diagnostics() throws IOException {
+        if (!Files.isRegularFile(path)) return List.of();
+        List<String> result = new java.util.ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+        for (int index = 0; index < lines.size(); index++) {
+            String trimmed = lines.get(index).trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) continue;
+            int separator = trimmed.indexOf('=');
+            if (separator <= 0) {
+                result.add("line " + (index + 1) + " is not key=value");
+                continue;
+            }
+            String key = trimmed.substring(0, separator).trim();
+            String value = trimmed.substring(separator + 1).trim();
+            if (!defaults().containsKey(key)) {
+                result.add("line " + (index + 1) + " uses unknown key " + truncate(key));
+                continue;
+            }
+            if (!seen.add(key)) result.add("line " + (index + 1) + " duplicates " + key);
+            try {
+                validate(key, value);
+            } catch (IllegalArgumentException error) {
+                result.add("line " + (index + 1) + " has invalid " + key);
+            }
+        }
+        return List.copyOf(result);
     }
 
     public Path path() {
@@ -189,6 +220,10 @@ public final class SettingsStore {
         } catch (NumberFormatException ignored) {
             return fallback;
         }
+    }
+
+    private String truncate(String value) {
+        return value.length() <= 128 ? value : value.substring(0, 128) + "…";
     }
 
     private void write(Map<String, String> values) throws IOException {

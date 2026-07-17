@@ -1,7 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+SCRIPT_DIRECTORY=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if test -s "$SCRIPT_DIRECTORY/bin/carbongate.jar"; then
+  ROOT=$SCRIPT_DIRECTORY
+else
+  ROOT=$(CDPATH= cd -- "$SCRIPT_DIRECTORY/.." && pwd)
+fi
 PREFIX="${HOME}/.local"
 SETUP=false
 HOSTS=
@@ -30,9 +35,22 @@ while test "$#" -gt 0; do
   esac
 done
 
-"$ROOT/scripts/build.sh"
+SOURCE_JAR="$ROOT/bin/carbongate.jar"
+test -s "$SOURCE_JAR" || {
+  printf 'Packaged CarbonGate JAR is missing: %s\n' "$SOURCE_JAR" >&2
+  exit 1
+}
+command -v java >/dev/null 2>&1 || {
+  printf '%s\n' 'java was not found. Install Java 21 or newer and add it to PATH.' >&2
+  exit 1
+}
+java -jar "$SOURCE_JAR" version >/dev/null || {
+  printf '%s\n' 'CarbonGate requires Java 21 or newer, and the packaged JAR must be intact.' >&2
+  exit 1
+}
+
 mkdir -p "$PREFIX/lib/carbongate" "$PREFIX/bin"
-install -m 0644 "$ROOT/build/carbongate.jar" "$PREFIX/lib/carbongate/carbongate.jar"
+install -m 0644 "$SOURCE_JAR" "$PREFIX/lib/carbongate/carbongate.jar"
 
 LAUNCHER="$PREFIX/bin/carbon"
 {

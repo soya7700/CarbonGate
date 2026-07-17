@@ -8,6 +8,8 @@ import io.carbongate.config.CarbonHome;
 import io.carbongate.config.SettingsStore;
 import io.carbongate.gateway.CarbonGateway;
 import io.carbongate.integration.HostCatalog;
+import io.carbongate.integration.InstallationDoctor;
+import io.carbongate.integration.IntegrationGuideService;
 import io.carbongate.integration.IntegrationInvocation;
 import io.carbongate.integration.IntegrationManager;
 import io.carbongate.integration.IntegrationRegistry;
@@ -281,7 +283,7 @@ public final class CarbonCli {
             case "list", "status" -> {
                 if (args.length > 1) throw new IllegalArgumentException("Usage: carbon integrations list");
                 System.out.println(Json.stringify(Map.of("registry", manager.registry().path().toString(),
-                        "integrations", manager.list())));
+                        "integrations", manager.list(), "targets", integrationGuides().catalog())));
                 yield 0;
             }
             case "remove" -> {
@@ -290,21 +292,35 @@ public final class CarbonCli {
                 System.out.println(Json.stringify(result));
                 yield Boolean.TRUE.equals(result.get("changed")) || "not_managed".equals(result.get("state")) ? 0 : 6;
             }
-            default -> throw new IllegalArgumentException("Usage: carbon integrations list|remove <host>");
+            case "guide" -> {
+                if (args.length != 2) throw new IllegalArgumentException("Usage: carbon integrations guide <host>");
+                System.out.println(Json.stringify(integrationGuides().guide(args[1])));
+                yield 0;
+            }
+            case "export" -> {
+                if (args.length != 2 && args.length != 4) {
+                    throw new IllegalArgumentException("Usage: carbon integrations export <host> [--format descriptor|mcp-json|codex-toml]");
+                }
+                String format = "descriptor";
+                if (args.length == 4) {
+                    if (!args[2].equals("--format")) throw new IllegalArgumentException("Expected --format");
+                    format = args[3];
+                }
+                Map<String, Object> result = integrationGuides().export(args[1], format);
+                System.out.println(Json.stringify(result));
+                yield Boolean.FALSE.equals(result.get("supported")) ? 6 : 0;
+            }
+            default -> throw new IllegalArgumentException("Usage: carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]");
         };
     }
 
     private static int doctor(String[] args) throws Exception {
         if (args.length != 0) throw new IllegalArgumentException("Usage: carbon doctor");
         IntegrationManager manager = integrationManager();
-        List<Map<String, Object>> results = manager.doctor();
-        System.out.println(Json.stringify(Map.of("registry", manager.registry().path().toString(),
-                "integrations", results)));
-        boolean unhealthy = results.stream().anyMatch(result -> {
-            String state = String.valueOf(result.get("state"));
-            return state.startsWith("managed_") || state.equals("external_registration");
-        });
-        return unhealthy ? 6 : 0;
+        Map<String, Object> result = new InstallationDoctor(CarbonHome.resolve(), manager,
+                IntegrationInvocation.current()).diagnose();
+        System.out.println(Json.stringify(result));
+        return Boolean.TRUE.equals(result.get("healthy")) ? 0 : 6;
     }
 
     private static int setMode(RuntimeContext runtime, String instruction) throws Exception {
@@ -424,6 +440,10 @@ public final class CarbonCli {
                 new SystemCommandRunner(), HostCatalog.all(), IntegrationInvocation.current());
     }
 
+    private static IntegrationGuideService integrationGuides() {
+        return new IntegrationGuideService(IntegrationInvocation.current());
+    }
+
     private static boolean authorize(String command, String id) {
         if ("allow".equalsIgnoreCase(System.getenv("CARBON_NON_INTERACTIVE"))) return true;
         Console console = System.console();
@@ -482,7 +502,7 @@ public final class CarbonCli {
 
                 Host integration:
                   carbon setup [--host codex,claude,...] [--all] [--dry-run]
-                  carbon integrations list|remove <host>
+                  carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]
                   carbon doctor
 
                 Execution:

@@ -1,5 +1,7 @@
 param(
-    [string]$Prefix = "$env:LOCALAPPDATA\CarbonGate"
+    [string]$Prefix = "$env:LOCALAPPDATA\CarbonGate",
+    [switch]$Setup,
+    [string]$Host
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,6 +53,17 @@ Set-Content -Path $Launcher -Value $LauncherContent -Encoding ASCII
 & $Launcher config init | Out-Null
 if ($LASTEXITCODE -ne 0) {
     throw "CarbonGate configuration initialization failed."
+}
+
+if ($Setup -or $Host) {
+    if ($Host) {
+        & $Launcher setup --host $Host
+    } else {
+        & $Launcher setup
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "CarbonGate host setup failed. Run 'carbon doctor' for details."
+    }
 }
 
 Write-Host "Installed CarbonGate to $Launcher"

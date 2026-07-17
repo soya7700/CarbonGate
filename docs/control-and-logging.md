@@ -13,8 +13,10 @@ carbon doctor
 
 This registers `carbon mcp serve`, which provides `carbon_status`,
 `carbon_rules`, `carbon_blocked`, `carbon_approvals`, `carbon_approve`,
-`carbon_deny_approval`, and `carbon_set_mode`. This is a control-plane
-integration and does not claim to intercept a host's built-in tools.
+`carbon_deny_approval`, `carbon_set_mode`, `carbon_integrations`,
+`carbon_integration_guide`, `carbon_integration_export`, and `carbon_doctor`.
+This is a control-plane integration and does not claim to intercept a host's
+built-in tools.
 
 ## Query commands
 
