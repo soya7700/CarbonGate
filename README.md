@@ -19,6 +19,7 @@ approval for risky operations.
 | Enable detailed enterprise audit | [Enterprise audit](#enterprise-detailed-audit) |
 | Build an optional enterprise component | [Enterprise Component Host](docs/enterprise-components.md) |
 | Write a data-only sensitive-data rule Pack | [Rule Packs v1](docs/rule-packs.md) |
+| Inspect sensitive data with an optional Provider | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
 
 ## What CarbonGate provides
 

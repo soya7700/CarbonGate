@@ -36,5 +36,7 @@ grep -F 'docs/enterprise-components.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/enterprise-components.md' "$ROOT/README-CN.md" >/dev/null
 grep -F 'docs/rule-packs.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/rule-packs.md' "$ROOT/README-CN.md" >/dev/null
+grep -F 'docs/sensitive-data-provider.md' "$ROOT/README.md" >/dev/null
+grep -F 'docs/sensitive-data-provider.md' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'

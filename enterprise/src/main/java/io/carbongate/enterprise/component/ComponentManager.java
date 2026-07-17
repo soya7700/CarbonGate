@@ -1,6 +1,10 @@
 package io.carbongate.enterprise.component;
 
+import io.carbongate.json.Json;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,7 +54,8 @@ public final class ComponentManager {
     public Map<String, Object> invoke(String id, String operation, Map<String, Object> payload)
             throws IOException, InterruptedException {
         ComponentManifest manifest = store.requireActive(id);
-        return providers.call(manifest, store.componentDirectory(id, manifest.version()), operation, payload);
+        return providers.call(manifest, store.componentDirectory(id, manifest.version()), operation,
+                providerPayload(manifest, payload));
     }
 
     public Map<String, Object> doctor() throws IOException, InterruptedException {
@@ -84,6 +89,24 @@ public final class ComponentManager {
         }
         return providers.call(manifest, store.componentDirectory(manifest.id(), manifest.version()),
                 "health", Map.of());
+    }
+
+    private Map<String, Object> providerPayload(ComponentManifest manifest, Map<String, Object> payload)
+            throws IOException {
+        Map<String, Object> result = new LinkedHashMap<>(payload == null ? Map.of() : payload);
+        if (result.containsKey("_carbongate")) {
+            throw new IllegalArgumentException("Provider payload cannot define reserved _carbongate context");
+        }
+        if (!manifest.permissions().contains("packs.read")) return Map.copyOf(result);
+        List<Map<String, Object>> packs = new ArrayList<>();
+        for (ComponentManifest pack : store.activeComponents(ComponentManifest.Kind.PACK)) {
+            Path document = store.componentDirectory(pack.id(), pack.version()).resolve("payload").resolve("pack.json");
+            PackDocument.read(document);
+            packs.add(Map.of("id", pack.id(), "version", pack.version(), "document",
+                    Json.object(Files.readString(document, StandardCharsets.UTF_8))));
+        }
+        result.put("_carbongate", Map.of("activePacks", List.copyOf(packs)));
+        return Map.copyOf(result);
     }
 
     private String compact(Throwable error) {

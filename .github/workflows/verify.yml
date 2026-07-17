@@ -73,6 +73,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Enterprise Component Host build failed" }
           & .\build\carbon-enterprise.cmd version
           if ($LASTEXITCODE -ne 0) { throw "Enterprise Component Host launcher failed" }
+          & .\scripts\build-pack.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Rule Pack build failed" }
+          & .\scripts\build-provider.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Sensitive Data Provider build failed" }
 
       - name: Verify prebuilt package installer
         shell: pwsh
