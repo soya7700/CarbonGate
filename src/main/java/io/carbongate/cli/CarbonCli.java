@@ -7,7 +7,13 @@ import io.carbongate.authorization.AuthorizationStore;
 import io.carbongate.config.CarbonHome;
 import io.carbongate.config.SettingsStore;
 import io.carbongate.gateway.CarbonGateway;
+import io.carbongate.integration.HostCatalog;
+import io.carbongate.integration.IntegrationInvocation;
+import io.carbongate.integration.IntegrationManager;
+import io.carbongate.integration.IntegrationRegistry;
+import io.carbongate.integration.SystemCommandRunner;
 import io.carbongate.json.Json;
+import io.carbongate.mcp.McpControlServer;
 import io.carbongate.mcp.McpProxy;
 import io.carbongate.model.Action;
 import io.carbongate.model.Decision;
@@ -25,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -61,6 +68,9 @@ public final class CarbonCli {
             case "approvals" -> approvals(slice(args, 1));
             case "mode" -> mode(slice(args, 1));
             case "control" -> control(slice(args, 1));
+            case "setup" -> setup(slice(args, 1));
+            case "integrations" -> integrations(slice(args, 1));
+            case "doctor" -> doctor(slice(args, 1));
             case "check" -> check(slice(args, 1));
             case "exec" -> exec(slice(args, 1));
             case "gateway" -> gateway(slice(args, 1));
@@ -238,6 +248,65 @@ public final class CarbonCli {
         return setMode(runtime(PolicyProfile.BALANCED), String.join(" ", args));
     }
 
+    private static int setup(String[] args) throws Exception {
+        List<String> hosts = new ArrayList<>();
+        boolean dryRun = false;
+        for (int index = 0; index < args.length; index++) {
+            switch (args[index]) {
+                case "--host" -> {
+                    if (++index >= args.length) throw new IllegalArgumentException("--host requires a value");
+                    hosts.add(args[index]);
+                }
+                case "--all" -> hosts.addAll(HostCatalog.all().stream().map(host -> host.id()).toList());
+                case "--dry-run" -> dryRun = true;
+                default -> throw new IllegalArgumentException("Usage: carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]");
+            }
+        }
+        IntegrationManager manager = integrationManager();
+        List<Map<String, Object>> results = manager.setup(hosts, !dryRun);
+        System.out.println(Json.stringify(Map.of("dryRun", dryRun,
+                "registry", manager.registry().path().toString(), "integrations", results)));
+        boolean failed = results.stream().anyMatch(result -> {
+            String state = String.valueOf(result.get("state"));
+            return state.equals("unavailable") || state.contains("failed") || state.contains("timed_out")
+                    || state.startsWith("conflict");
+        });
+        return failed ? 6 : 0;
+    }
+
+    private static int integrations(String[] args) throws Exception {
+        IntegrationManager manager = integrationManager();
+        String command = args.length == 0 ? "list" : args[0];
+        return switch (command) {
+            case "list", "status" -> {
+                if (args.length > 1) throw new IllegalArgumentException("Usage: carbon integrations list");
+                System.out.println(Json.stringify(Map.of("registry", manager.registry().path().toString(),
+                        "integrations", manager.list())));
+                yield 0;
+            }
+            case "remove" -> {
+                if (args.length != 2) throw new IllegalArgumentException("Usage: carbon integrations remove <host>");
+                Map<String, Object> result = manager.remove(args[1]);
+                System.out.println(Json.stringify(result));
+                yield Boolean.TRUE.equals(result.get("changed")) || "not_managed".equals(result.get("state")) ? 0 : 6;
+            }
+            default -> throw new IllegalArgumentException("Usage: carbon integrations list|remove <host>");
+        };
+    }
+
+    private static int doctor(String[] args) throws Exception {
+        if (args.length != 0) throw new IllegalArgumentException("Usage: carbon doctor");
+        IntegrationManager manager = integrationManager();
+        List<Map<String, Object>> results = manager.doctor();
+        System.out.println(Json.stringify(Map.of("registry", manager.registry().path().toString(),
+                "integrations", results)));
+        boolean unhealthy = results.stream().anyMatch(result -> {
+            String state = String.valueOf(result.get("state"));
+            return state.startsWith("managed_") || state.equals("external_registration");
+        });
+        return unhealthy ? 6 : 0;
+    }
+
     private static int setMode(RuntimeContext runtime, String instruction) throws Exception {
         SettingsStore settings = runtime.settings();
         EnforcementMode previous = settings.mode();
@@ -301,8 +370,11 @@ public final class CarbonCli {
     }
 
     private static int mcp(String[] args) throws Exception {
+        if (args.length == 1 && args[0].equals("serve")) {
+            return new McpControlServer(CarbonHome.resolve(), PolicyProfile.BALANCED).run();
+        }
         if (args.length == 0 || !args[0].equals("proxy")) {
-            throw new IllegalArgumentException("Usage: carbon mcp proxy [options] -- SERVER [ARGS...]");
+            throw new IllegalArgumentException("Usage: carbon mcp serve | carbon mcp proxy [options] -- SERVER [ARGS...]");
         }
         CliOptions options = CliOptions.parse(slice(args, 1));
         if (options.trailing().isEmpty()) throw new IllegalArgumentException("MCP server command is required");
@@ -345,6 +417,11 @@ public final class CarbonCli {
     private static RuntimeContext runtime(PolicyProfile profile) {
         CarbonGateRuntime.Instance instance = CarbonGateRuntime.fromConfig(CarbonHome.resolve(), profile);
         return new RuntimeContext(instance.settings(), instance.approvals(), instance.audit(), instance.guard());
+    }
+
+    private static IntegrationManager integrationManager() {
+        return new IntegrationManager(new IntegrationRegistry(CarbonHome.resolve()),
+                new SystemCommandRunner(), HostCatalog.all(), IntegrationInvocation.current());
     }
 
     private static boolean authorize(String command, String id) {
@@ -403,11 +480,17 @@ public final class CarbonCli {
                   carbon mode show|set <自然语言级别>
                   carbon control "切换到警告/每次授权/全部禁止/平衡模式"
 
+                Host integration:
+                  carbon setup [--host codex,claude,...] [--all] [--dry-run]
+                  carbon integrations list|remove <host>
+                  carbon doctor
+
                 Execution:
                   carbon check [--profile PROFILE] [--workspace PATH] -- COMMAND
                   carbon exec [--profile PROFILE] [--workspace PATH] -- COMMAND
                   carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
                   carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
+                  carbon mcp serve
                   carbon redact TEXT
                   carbon run [--workspace PATH] -- AGENT [ARGS...]
                   carbon version

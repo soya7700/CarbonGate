@@ -4,6 +4,18 @@ CarbonGate exposes machine-readable CLI commands so an agent such as Codex can
 answer natural-language security questions by invoking the local `carbon`
 executable.
 
+Supported CLI hosts can receive the same capabilities as MCP tools:
+
+```bash
+carbon setup
+carbon doctor
+```
+
+This registers `carbon mcp serve`, which provides `carbon_status`,
+`carbon_rules`, `carbon_blocked`, `carbon_approvals`, `carbon_approve`,
+`carbon_deny_approval`, and `carbon_set_mode`. This is a control-plane
+integration and does not claim to intercept a host's built-in tools.
+
 ## Query commands
 
 ```bash
