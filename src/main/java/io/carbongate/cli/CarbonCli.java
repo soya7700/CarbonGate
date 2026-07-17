@@ -16,6 +16,8 @@ import io.carbongate.integration.IntegrationRegistry;
 import io.carbongate.integration.SystemCommandRunner;
 import io.carbongate.json.Json;
 import io.carbongate.mcp.McpControlServer;
+import io.carbongate.mcp.McpProfileService;
+import io.carbongate.mcp.McpProfileStore;
 import io.carbongate.mcp.McpProxy;
 import io.carbongate.model.Action;
 import io.carbongate.model.Decision;
@@ -389,13 +391,98 @@ public final class CarbonCli {
         if (args.length == 1 && args[0].equals("serve")) {
             return new McpControlServer(CarbonHome.resolve(), PolicyProfile.BALANCED).run();
         }
+        if (args.length > 0 && args[0].equals("profile")) {
+            return mcpProfile(slice(args, 1));
+        }
         if (args.length == 0 || !args[0].equals("proxy")) {
-            throw new IllegalArgumentException("Usage: carbon mcp serve | carbon mcp proxy [options] -- SERVER [ARGS...]");
+            throw new IllegalArgumentException("Usage: carbon mcp serve | carbon mcp proxy [options] -- SERVER [ARGS...] | carbon mcp profile COMMAND");
         }
         CliOptions options = CliOptions.parse(slice(args, 1));
         if (options.trailing().isEmpty()) throw new IllegalArgumentException("MCP server command is required");
         Files.createDirectories(options.workspace());
         return new McpProxy(options.workspace(), runtime(options.profile()).guard()).run(options.trailing());
+    }
+
+    private static int mcpProfile(String[] args) throws Exception {
+        if (args.length == 0) throw new IllegalArgumentException(mcpProfileUsage());
+        McpProfileStore store = new McpProfileStore(CarbonHome.resolve());
+        McpProfileService profiles = new McpProfileService(store);
+        return switch (args[0]) {
+            case "list" -> {
+                if (args.length != 1) throw new IllegalArgumentException(mcpProfileUsage());
+                System.out.println(Json.stringify(Map.of("registry", store.path().toString(),
+                        "coverage", "mcp_only", "profiles", store.list().stream().map(McpProfileStore.Profile::map).toList())));
+                yield 0;
+            }
+            case "show" -> {
+                if (args.length != 2) throw new IllegalArgumentException(mcpProfileUsage());
+                System.out.println(Json.stringify(Map.of("registry", store.path().toString(),
+                        "coverage", "mcp_only", "profile", store.require(args[1]).map())));
+                yield 0;
+            }
+            case "add" -> addMcpProfile(store, args);
+            case "remove" -> {
+                if (args.length != 2) throw new IllegalArgumentException(mcpProfileUsage());
+                boolean removed = store.remove(args[1]);
+                runtime(PolicyProfile.BALANCED).audit().recordControl("mcp_profile_removed",
+                        Map.of("name", args[1], "changed", removed));
+                System.out.println(Json.stringify(Map.of("name", args[1],
+                        "status", removed ? "removed" : "not_found", "registry", store.path().toString())));
+                yield removed ? 0 : 5;
+            }
+            case "run" -> {
+                if (args.length != 2) throw new IllegalArgumentException(mcpProfileUsage());
+                McpProfileStore.Profile profile = store.require(args[1]);
+                yield new McpProxy(profile.workspace(), runtime(PolicyProfile.BALANCED).guard()).run(profile.command());
+            }
+            case "export" -> {
+                if (args.length != 2 && args.length != 4) throw new IllegalArgumentException(mcpProfileUsage());
+                String format = "descriptor";
+                if (args.length == 4) {
+                    if (!args[2].equals("--format")) throw new IllegalArgumentException("Expected --format");
+                    format = args[3];
+                }
+                System.out.println(Json.stringify(profiles.export(args[1], format)));
+                yield 0;
+            }
+            default -> throw new IllegalArgumentException(mcpProfileUsage());
+        };
+    }
+
+    private static int addMcpProfile(McpProfileStore store, String[] args) throws Exception {
+        if (args.length < 4) throw new IllegalArgumentException(mcpProfileUsage());
+        String name = args[1];
+        Path workspace = Path.of(System.getProperty("user.dir"));
+        boolean replace = false;
+        int delimiter = -1;
+        for (int index = 2; index < args.length; index++) {
+            switch (args[index]) {
+                case "--workspace" -> {
+                    if (++index >= args.length) throw new IllegalArgumentException("--workspace requires a path");
+                    workspace = Path.of(args[index]);
+                }
+                case "--replace" -> replace = true;
+                case "--" -> {
+                    delimiter = index;
+                    index = args.length;
+                }
+                default -> throw new IllegalArgumentException("Unknown MCP profile add option: " + args[index]);
+            }
+        }
+        if (delimiter < 0 || delimiter + 1 >= args.length) {
+            throw new IllegalArgumentException("MCP server command is required after --");
+        }
+        McpProfileStore.Profile profile = store.put(name, workspace,
+                List.of(Arrays.copyOfRange(args, delimiter + 1, args.length)), replace);
+        runtime(PolicyProfile.BALANCED).audit().recordControl("mcp_profile_saved",
+                Map.of("name", profile.name(), "workspace", profile.workspace().toString(), "replaced", replace));
+        System.out.println(Json.stringify(Map.of("status", replace ? "saved_or_replaced" : "created",
+                "registry", store.path().toString(), "coverage", "mcp_only", "profile", profile.map())));
+        return 0;
+    }
+
+    private static String mcpProfileUsage() {
+        return "Usage: carbon mcp profile list|show <name>|add <name> [--workspace PATH] [--replace] -- SERVER [ARGS...]|remove <name>|run <name>|export <name> [--format descriptor|mcp-json|codex-toml]";
     }
 
     private static int redact(String[] args) {
@@ -511,6 +598,8 @@ public final class CarbonCli {
                   carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
                   carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
                   carbon mcp serve
+                  carbon mcp profile list|show <name>|add <name> [--workspace PATH] -- SERVER [ARGS...]
+                  carbon mcp profile remove|run <name>|export <name> [--format FORMAT]
                   carbon redact TEXT
                   carbon run [--workspace PATH] -- AGENT [ARGS...]
                   carbon version

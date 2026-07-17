@@ -6,25 +6,37 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.ArrayList;
 
 public final class IntegrationInvocation {
     private IntegrationInvocation() {}
 
     public static List<String> current() {
+        return forArguments("mcp", "serve");
+    }
+
+    public static List<String> forArguments(String... arguments) {
+        List<String> suffix = List.of(arguments);
         String configured = System.getenv("CARBON_BIN");
         if (configured != null && !configured.isBlank()) {
-            return List.of(configured, "mcp", "serve");
+            return append(List.of(configured), suffix);
         }
         try {
             Path location = Path.of(CarbonCli.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             if (Files.isRegularFile(location) && location.getFileName().toString().endsWith(".jar")) {
-                return List.of(javaExecutable(), "-jar", location.toAbsolutePath().normalize().toString(),
-                        "mcp", "serve");
+                return append(List.of(javaExecutable(), "-jar", location.toAbsolutePath().normalize().toString()), suffix);
             }
         } catch (URISyntaxException | RuntimeException ignored) {
             // Development classpaths fall back to the installed launcher.
         }
-        return List.of(windows() ? "carbon.cmd" : "carbon", "mcp", "serve");
+        return append(List.of(windows() ? "carbon.cmd" : "carbon"), suffix);
+    }
+
+    private static List<String> append(List<String> prefix, List<String> suffix) {
+        List<String> command = new ArrayList<>(prefix.size() + suffix.size());
+        command.addAll(prefix);
+        command.addAll(suffix);
+        return List.copyOf(command);
     }
 
     private static String javaExecutable() {

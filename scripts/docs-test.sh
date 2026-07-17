@@ -23,5 +23,9 @@ grep -F '.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT
 grep -F '.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT/README-CN.md" >/dev/null
 grep -F 'JDK 21-targeted' "$ROOT/README.md" >/dev/null
 grep -F 'JDK 21 为目标' "$ROOT/README-CN.md" >/dev/null
+grep -F 'carbon mcp profile add filesystem' "$ROOT/README.md" >/dev/null
+grep -F 'carbon mcp profile add filesystem' "$ROOT/README-CN.md" >/dev/null
+grep -F '$CARBON_HOME/mcp/profiles.json' "$ROOT/README.md" >/dev/null
+grep -F '$CARBON_HOME/mcp/profiles.json' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'

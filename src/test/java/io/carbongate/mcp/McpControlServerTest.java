@@ -31,6 +31,8 @@ public final class McpControlServerTest {
         assert toolsJson.contains("carbon_set_mode");
         assert toolsJson.contains("carbon_approve");
         assert toolsJson.contains("carbon_integration_guide");
+        assert toolsJson.contains("carbon_mcp_profiles");
+        assert toolsJson.contains("carbon_mcp_profile_export");
         assert toolsJson.contains("carbon_doctor");
 
         Map<String, Object> status = call(server, 3, "carbon_status", Map.of());
@@ -51,6 +53,16 @@ public final class McpControlServerTest {
         Map<String, Object> coze = call(server, 52, "carbon_integration_export",
                 Map.of("host", "coze"));
         assert Json.stringify(coze).contains("remoteTransportRequired");
+
+        Path workspace = Files.createDirectory(home.resolve("workspace"));
+        new McpProfileStore(home).put("example", workspace, java.util.List.of("example-mcp"), false);
+        Map<String, Object> profiles = call(server, 53, "carbon_mcp_profiles", Map.of());
+        assert Json.stringify(profiles).contains("example");
+        Map<String, Object> profile = call(server, 54, "carbon_mcp_profile", Map.of("name", "example"));
+        assert Json.stringify(profile).contains("example-mcp");
+        Map<String, Object> exported = call(server, 55, "carbon_mcp_profile_export",
+                Map.of("name", "example", "format", "mcp-json"));
+        assert Json.stringify(exported).contains("mcp_only");
 
         Map<String, Object> invalid = server.handle(Map.of(
                 "jsonrpc", "2.0", "id", 6L, "method", "tools/call",
