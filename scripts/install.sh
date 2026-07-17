@@ -44,6 +44,19 @@ chmod +x "$LAUNCHER"
 "$LAUNCHER" config init >/dev/null
 
 if test "$SETUP" = true; then
+  INSTALL_CODEX_SKILL=false
+  if test -n "$HOSTS"; then
+    case ",$HOSTS," in *,codex,*) INSTALL_CODEX_SKILL=true ;; esac
+  elif command -v codex >/dev/null 2>&1; then
+    INSTALL_CODEX_SKILL=true
+  fi
+  if test "$INSTALL_CODEX_SKILL" = true && test -s "$ROOT/skills/carbongate/SKILL.md"; then
+    CODEX_STATE=${CODEX_HOME:-"$HOME/.codex"}
+    if test ! -e "$CODEX_STATE/skills/carbongate"; then
+      mkdir -p "$CODEX_STATE/skills"
+      cp -R "$ROOT/skills/carbongate" "$CODEX_STATE/skills/carbongate"
+    fi
+  fi
   if test -n "$HOSTS"; then
     "$LAUNCHER" setup --host "$HOSTS"
   else

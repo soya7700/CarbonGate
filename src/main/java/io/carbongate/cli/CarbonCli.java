@@ -13,6 +13,7 @@ import io.carbongate.integration.IntegrationGuideService;
 import io.carbongate.integration.IntegrationInvocation;
 import io.carbongate.integration.IntegrationManager;
 import io.carbongate.integration.IntegrationRegistry;
+import io.carbongate.integration.ProtectedRouteManager;
 import io.carbongate.integration.SystemCommandRunner;
 import io.carbongate.json.Json;
 import io.carbongate.mcp.McpControlServer;
@@ -75,6 +76,9 @@ public final class CarbonCli {
             case "setup" -> setup(slice(args, 1));
             case "integrations" -> integrations(slice(args, 1));
             case "doctor" -> doctor(slice(args, 1));
+            case "protect" -> protect(slice(args, 1));
+            case "unprotect" -> unprotect(slice(args, 1));
+            case "protections" -> protections(slice(args, 1));
             case "check" -> check(slice(args, 1));
             case "exec" -> exec(slice(args, 1));
             case "gateway" -> gateway(slice(args, 1));
@@ -325,6 +329,78 @@ public final class CarbonCli {
         return Boolean.TRUE.equals(result.get("healthy")) ? 0 : 6;
     }
 
+    private static int protect(String[] args) throws Exception {
+        Path workspace = Path.of(".").toAbsolutePath().normalize();
+        String name = null;
+        String host = "codex";
+        boolean dryRun = false;
+        int delimiter = -1;
+        boolean workspaceSet = false;
+        for (int index = 0; index < args.length; index++) {
+            switch (args[index]) {
+                case "--name" -> name = requiredValue(args, ++index, "--name");
+                case "--host" -> host = requiredValue(args, ++index, "--host");
+                case "--dry-run" -> dryRun = true;
+                case "--" -> {
+                    delimiter = index;
+                    index = args.length;
+                }
+                default -> {
+                    if (args[index].startsWith("--") || workspaceSet) {
+                        throw new IllegalArgumentException(protectUsage());
+                    }
+                    workspace = Path.of(args[index]).toAbsolutePath().normalize();
+                    workspaceSet = true;
+                }
+            }
+        }
+        if (name == null || delimiter < 0 || delimiter + 1 >= args.length) {
+            throw new IllegalArgumentException(protectUsage());
+        }
+        if (!Files.isDirectory(workspace)) throw new IllegalArgumentException("Protection workspace must be an existing directory");
+        Map<String, Object> result = protectedRoutes().protect(host, name, workspace,
+                List.of(Arrays.copyOfRange(args, delimiter + 1, args.length)), dryRun);
+        runtime(PolicyProfile.BALANCED).audit().recordControl("protected_route_requested",
+                Map.of("host", host, "name", name, "state", String.valueOf(result.get("state"))));
+        System.out.println(Json.stringify(result));
+        String state = String.valueOf(result.get("state"));
+        return state.equals("protected") || state.equals("planned") || state.equals("already_protected") ? 0 : 6;
+    }
+
+    private static int unprotect(String[] args) throws Exception {
+        if (args.length != 1 && args.length != 3) throw new IllegalArgumentException("Usage: carbon unprotect <name> [--host codex|generic]");
+        String host = "codex";
+        if (args.length == 3) {
+            if (!args[1].equals("--host")) throw new IllegalArgumentException("Expected --host");
+            host = args[2];
+        }
+        Map<String, Object> result = protectedRoutes().unprotect(host, args[0]);
+        runtime(PolicyProfile.BALANCED).audit().recordControl("protected_route_removed",
+                Map.of("host", host, "name", args[0], "state", String.valueOf(result.get("state"))));
+        System.out.println(Json.stringify(result));
+        String state = String.valueOf(result.get("state"));
+        return state.equals("removed") || state.equals("not_managed") ? 0 : 6;
+    }
+
+    private static int protections(String[] args) throws Exception {
+        if (args.length > 1 || (args.length == 1 && !args[0].equals("list"))) {
+            throw new IllegalArgumentException("Usage: carbon protections [list]");
+        }
+        ProtectedRouteManager manager = protectedRoutes();
+        System.out.println(Json.stringify(Map.of("registry", manager.registry().path().toString(),
+                "protections", manager.list())));
+        return 0;
+    }
+
+    private static String requiredValue(String[] args, int index, String option) {
+        if (index >= args.length) throw new IllegalArgumentException(option + " requires a value");
+        return args[index];
+    }
+
+    private static String protectUsage() {
+        return "Usage: carbon protect [WORKSPACE] --name NAME [--host codex|generic] [--dry-run] -- SERVER [ARGS...]";
+    }
+
     private static int setMode(RuntimeContext runtime, String instruction) throws Exception {
         SettingsStore settings = runtime.settings();
         EnforcementMode previous = settings.mode();
@@ -531,6 +607,10 @@ public final class CarbonCli {
         return new IntegrationGuideService(IntegrationInvocation.current());
     }
 
+    private static ProtectedRouteManager protectedRoutes() {
+        return new ProtectedRouteManager(CarbonHome.resolve(), new SystemCommandRunner());
+    }
+
     private static boolean authorize(String command, String id) {
         if ("allow".equalsIgnoreCase(System.getenv("CARBON_NON_INTERACTIVE"))) return true;
         Console console = System.console();
@@ -588,6 +668,9 @@ public final class CarbonCli {
                   carbon control "切换到警告/每次授权/全部禁止/平衡模式"
 
                 Host integration:
+                  carbon protect [WORKSPACE] --name NAME [--host codex|generic] -- SERVER [ARGS...]
+                  carbon protections [list]
+                  carbon unprotect <name> [--host codex|generic]
                   carbon setup [--host codex,claude,...] [--all] [--dry-run]
                   carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]
                   carbon doctor

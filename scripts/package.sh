@@ -9,12 +9,14 @@ fi
 
 VERSION=${1:-0.2.0}
 STAGE="$ROOT/build/carbongate-$VERSION"
-mkdir -p "$STAGE/bin" "$STAGE/config" "$STAGE/docs"
+mkdir -p "$STAGE/bin" "$STAGE/config" "$STAGE/docs" "$STAGE/skills/carbongate/agents"
 cp "$ROOT/build/carbongate.jar" "$ROOT/build/carbon" "$ROOT/build/carbon.cmd" "$STAGE/bin/"
 cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$ROOT/THIRD_PARTY_NOTICES.md" "$STAGE/"
 cp "$ROOT/README.md" "$ROOT/README-CN.md" "$ROOT/SECURITY.md" "$STAGE/"
 cp "$ROOT/config/carbon.conf.example" "$STAGE/config/"
 cp "$ROOT/docs/"*.md "$STAGE/docs/"
+cp "$ROOT/skills/carbongate/SKILL.md" "$STAGE/skills/carbongate/"
+cp "$ROOT/skills/carbongate/agents/openai.yaml" "$STAGE/skills/carbongate/agents/"
 cp "$ROOT/scripts/install-package.sh" "$STAGE/install.sh"
 cp "$ROOT/scripts/install-package.ps1" "$STAGE/install.ps1"
 chmod +x "$STAGE/install.sh"

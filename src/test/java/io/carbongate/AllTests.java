@@ -8,6 +8,7 @@ import io.carbongate.gateway.GatewayTest;
 import io.carbongate.integration.IntegrationManagerTest;
 import io.carbongate.integration.IntegrationGuideServiceTest;
 import io.carbongate.integration.InstallationDoctorTest;
+import io.carbongate.integration.ProtectedRouteManagerTest;
 import io.carbongate.json.JsonTest;
 import io.carbongate.mcp.McpControlServerTest;
 import io.carbongate.mcp.McpProfileServiceTest;
@@ -40,6 +41,7 @@ public final class AllTests {
         IntegrationManagerTest.run();
         IntegrationGuideServiceTest.run();
         InstallationDoctorTest.run();
+        ProtectedRouteManagerTest.run();
         GatewayTest.run();
         System.out.println("All CarbonGate tests passed.");
     }

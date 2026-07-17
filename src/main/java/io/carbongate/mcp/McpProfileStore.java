@@ -73,9 +73,10 @@ public final class McpProfileStore {
 
     public synchronized Profile put(String requestedName, Path workspace, List<String> command,
                                     boolean replace) throws IOException {
-        String name = normalizeName(requestedName);
-        Path root = validateWorkspace(workspace);
-        List<String> safeCommand = validateCommand(command);
+        Profile candidate = validate(requestedName, workspace, command);
+        String name = candidate.name();
+        Path root = candidate.workspace();
+        List<String> safeCommand = candidate.command();
         Map<String, Profile> profiles = new LinkedHashMap<>();
         list().forEach(profile -> profiles.put(profile.name(), profile));
         Profile existing = profiles.get(name);
@@ -91,6 +92,12 @@ public final class McpProfileStore {
         profiles.put(name, profile);
         write(profiles.values().stream().sorted(Comparator.comparing(Profile::name)).toList());
         return profile;
+    }
+
+    public Profile validate(String requestedName, Path workspace, List<String> command) {
+        String now = Instant.now().toString();
+        return new Profile(normalizeName(requestedName), validateWorkspace(workspace),
+                validateCommand(command), now, now);
     }
 
     public synchronized boolean remove(String requestedName) throws IOException {

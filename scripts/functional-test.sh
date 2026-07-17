@@ -22,6 +22,8 @@ grep -F -- '--setup' "$ROOT/scripts/install.sh" >/dev/null
 grep -F '[switch]$Setup' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F '[string]$Hosts' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F '[string]$Hosts' "$ROOT/scripts/install-package.ps1" >/dev/null
+grep -F 'skills/carbongate' "$ROOT/scripts/install-package.sh" >/dev/null
+grep -F 'skills\carbongate' "$ROOT/scripts/install-package.ps1" >/dev/null
 if grep -E '\[string\]\$Host([,[:space:]]|$)' "$ROOT/scripts/install.ps1" "$ROOT/scripts/install-package.ps1" >/dev/null; then
   printf '%s\n' 'PowerShell installer parameter must not shadow the built-in $Host variable.' >&2
   exit 1
@@ -98,6 +100,18 @@ fi
 echo_server='while IFS= read -r line; do printf "%s\n" "$line"; done'
 safe_request='{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"execute_command","arguments":{"command":"git status"}}}'
 
+"$CARBON" protect "$WORKSPACE" --name preview-route --host generic --dry-run -- /bin/sh -c "$echo_server" | \
+  grep -F '"state":"planned"' >/dev/null
+if "$CARBON" protections | grep -F 'preview-route' >/dev/null; then
+  printf 'Dry-run unexpectedly wrote protected route state.\n' >&2
+  exit 1
+fi
+"$CARBON" protect "$WORKSPACE" --name protected-echo --host generic -- /bin/sh -c "$echo_server" | \
+  grep -F '"coverage":"mcp_only"' >/dev/null
+"$CARBON" protections | grep -F '"name":"protected-echo"' >/dev/null
+protected_safe=$(printf '%s\n' "$safe_request" | "$CARBON" mcp profile run protected-echo)
+printf '%s\n' "$protected_safe" | grep -F '"id":1' >/dev/null
+
 "$CARBON" mcp profile add echo --workspace "$WORKSPACE" -- /bin/sh -c "$echo_server" | \
   grep -F '"coverage":"mcp_only"' >/dev/null
 "$CARBON" mcp profile list | grep -F '"name":"echo"' >/dev/null
@@ -168,5 +182,6 @@ test "$block_status" -eq 3
 printf '%s\n' "$block_result" | grep -F '"decision":"deny"' >/dev/null
 "$CARBON" control '恢复平衡模式' >/dev/null
 "$CARBON" mcp profile remove echo | grep -F '"status":"removed"' >/dev/null
+"$CARBON" unprotect protected-echo --host generic | grep -F '"state":"removed"' >/dev/null
 
 printf 'CarbonGate functional tests passed.\n'
