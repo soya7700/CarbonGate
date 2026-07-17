@@ -23,6 +23,7 @@ approval for risky operations.
 | Run commands in an optional container Sandbox | [Container Sandbox Provider](docs/container-sandbox.md) |
 | Compose enterprise security components | [Enterprise Guard Pipeline](docs/enterprise-pipeline.md) |
 | Require enterprise approval decisions | [Approval Policy Provider](docs/approval-provider.md) |
+| Record tamper-evident enterprise events | [Enterprise Audit Provider](docs/enterprise-audit-provider.md) |
 
 ## What CarbonGate provides
 
