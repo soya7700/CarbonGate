@@ -22,6 +22,7 @@ approval for risky operations.
 | Inspect sensitive data with an optional Provider | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
 | Run commands in an optional container Sandbox | [Container Sandbox Provider](docs/container-sandbox.md) |
 | Compose enterprise security components | [Enterprise Guard Pipeline](docs/enterprise-pipeline.md) |
+| Require enterprise approval decisions | [Approval Policy Provider](docs/approval-provider.md) |
 
 ## What CarbonGate provides
 

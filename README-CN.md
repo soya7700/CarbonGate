@@ -21,6 +21,7 @@ CarbonGate 在命令或工具调用执行前进行评估，应用工作区和网
 | 使用可选 Provider 检查敏感数据 | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
 | 使用可选容器 Sandbox 执行命令 | [Container Sandbox Provider](docs/container-sandbox.md) |
 | 编排企业安全组件 | [Enterprise Guard Pipeline](docs/enterprise-pipeline.md) |
+| 执行企业审批决策 | [Approval Policy Provider](docs/approval-provider.md) |
 
 ## 核心能力
 
