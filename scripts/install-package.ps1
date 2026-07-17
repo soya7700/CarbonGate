@@ -1,7 +1,7 @@
 param(
     [string]$Prefix = "$env:LOCALAPPDATA\CarbonGate",
     [switch]$Setup,
-    [string]$Host
+    [string]$Hosts
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,9 +40,9 @@ if ($LASTEXITCODE -ne 0) {
     throw "CarbonGate configuration initialization failed."
 }
 
-if ($Setup -or $Host) {
-    if ($Host) {
-        & $Launcher setup --host $Host
+if ($Setup -or $Hosts) {
+    if ($Hosts) {
+        & $Launcher setup --host $Hosts
     } else {
         & $Launcher setup
     }
