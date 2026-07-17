@@ -84,7 +84,7 @@ powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION\install.ps1 -Setup
 只接入指定的 AI CLI：
 
 ```powershell
-.\carbongate-VERSION\install.ps1 -Host "codex,claude,openclaw"
+.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"
 ```
 
 默认启动器是 `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd`。当前会话立即使用：
@@ -211,7 +211,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Setup
 # 或者只接入指定宿主：
-.\scripts\install.ps1 -Host "codex,claude"
+.\scripts\install.ps1 -Hosts "codex,claude"
 ```
 
 默认命令位置：

@@ -86,7 +86,7 @@ powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION\install.ps1 -Setup
 To configure only selected AI CLIs:
 
 ```powershell
-.\carbongate-VERSION\install.ps1 -Host "codex,claude,openclaw"
+.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"
 ```
 
 The default launcher is
@@ -220,7 +220,7 @@ Install and configure detected AI CLIs in one step with:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Setup
 # Or only selected hosts:
-.\scripts\install.ps1 -Host "codex,claude"
+.\scripts\install.ps1 -Hosts "codex,claude"
 ```
 
 The default command is:

@@ -20,6 +20,12 @@ grep -F 'carbon.cmd' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F 'config init' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F -- '--setup' "$ROOT/scripts/install.sh" >/dev/null
 grep -F '[switch]$Setup' "$ROOT/scripts/install.ps1" >/dev/null
+grep -F '[string]$Hosts' "$ROOT/scripts/install.ps1" >/dev/null
+grep -F '[string]$Hosts' "$ROOT/scripts/install-package.ps1" >/dev/null
+if grep -E '\[string\]\$Host([,[:space:]]|$)' "$ROOT/scripts/install.ps1" "$ROOT/scripts/install-package.ps1" >/dev/null; then
+  printf '%s\n' 'PowerShell installer parameter must not shadow the built-in $Host variable.' >&2
+  exit 1
+fi
 test -x "$ROOT/scripts/install-package.sh"
 test -s "$ROOT/scripts/install-package.ps1"
 

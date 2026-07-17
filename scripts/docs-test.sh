@@ -19,6 +19,8 @@ grep -F './carbongate-VERSION/install.sh --setup' "$ROOT/README.md" >/dev/null
 grep -F '.\carbongate-VERSION\install.ps1 -Setup' "$ROOT/README.md" >/dev/null
 grep -F './carbongate-VERSION/install.sh --setup' "$ROOT/README-CN.md" >/dev/null
 grep -F '.\carbongate-VERSION\install.ps1 -Setup' "$ROOT/README-CN.md" >/dev/null
+grep -F '.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT/README.md" >/dev/null
+grep -F '.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT/README-CN.md" >/dev/null
 grep -F 'JDK 21-targeted' "$ROOT/README.md" >/dev/null
 grep -F 'JDK 21 为目标' "$ROOT/README-CN.md" >/dev/null
 
