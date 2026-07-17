@@ -38,6 +38,8 @@ test -s "$ROOT/build/container-sandbox-1.0.0.carbon" || "$ROOT/scripts/build-san
 check_bytes 'Container Sandbox Provider package' "$ROOT/build/container-sandbox-1.0.0.carbon" 102400
 test -s "$ROOT/build/approval-policy-provider-1.0.0.carbon" || "$ROOT/scripts/build-approval.sh" >/dev/null
 check_bytes 'Approval Policy Provider package' "$ROOT/build/approval-policy-provider-1.0.0.carbon" 102400
+test -s "$ROOT/build/enterprise-audit-provider-1.0.0.carbon" || "$ROOT/scripts/build-audit.sh" >/dev/null
+check_bytes 'Enterprise Audit Provider package' "$ROOT/build/enterprise-audit-provider-1.0.0.carbon" 102400
 
 if jar --list --file "$JAR" | grep -q '^io/carbongate/enterprise/'; then
   printf 'Enterprise implementation leaked into the base JAR.\n' >&2

@@ -81,6 +81,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Container Sandbox Provider build failed" }
           & .\scripts\build-approval.ps1
           if ($LASTEXITCODE -ne 0) { throw "Approval Policy Provider build failed" }
+          & .\scripts\build-audit.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Enterprise Audit Provider build failed" }
 
       - name: Verify prebuilt package installer
         shell: pwsh
