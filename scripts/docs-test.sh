@@ -32,5 +32,7 @@ grep -F 'docs/architecture.md' "$ROOT/README-CN.md" >/dev/null
 grep -F 'carbon protect /absolute/project/path' "$ROOT/README.md" >/dev/null
 grep -F 'carbon protect /absolute/project/path' "$ROOT/README-CN.md" >/dev/null
 grep -F 'name: carbongate' "$ROOT/skills/carbongate/SKILL.md" >/dev/null
+grep -F 'docs/enterprise-components.md' "$ROOT/README.md" >/dev/null
+grep -F 'docs/enterprise-components.md' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'
