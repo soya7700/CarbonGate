@@ -111,15 +111,22 @@ security boundary. Reports for suspected vulnerabilities should follow
 ```bash
 ./scripts/test.sh
 ./scripts/build.sh
+./scripts/functional-test.sh
+./scripts/verify.sh
 ./scripts/package.sh 0.1.0
 ```
+
+`scripts/verify.sh` is the single local and CI verification entry point. GitHub
+Actions runs it for pull requests, pushes to protected development branches, and
+manual workflow dispatches. Releases are intentionally not automated; creating
+or publishing a release remains a separate, explicitly requested operation.
 
 The project avoids build-tool and runtime dependencies in the MVP so that a
 fresh JDK is sufficient. The generated executable is `build/carbon`.
 
 ## License compliance
 
-CarbonGate is licensed under Apache-2.0. The MVP has no third-party source or
-runtime dependencies. See [the dependency policy](docs/dependency-policy.md) and
+CarbonGate is licensed under Apache-2.0. Its runtime and release archive have no
+third-party source or runtime dependencies. See [the dependency policy](docs/dependency-policy.md) and
 [third-party notices](THIRD_PARTY_NOTICES.md). Both must be updated before any
 external component is distributed with the project.

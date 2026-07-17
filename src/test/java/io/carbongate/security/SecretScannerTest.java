@@ -13,5 +13,9 @@ public final class SecretScannerTest {
         // test data as a committed credential.
         var key = scanner.scan("sk-" + "1234567890abcdefghijklmnopqrstuv");
         assert key.findings().contains("OPENAI_API_KEY");
+
+        var repeated = scanner.scan("token=synthetic-repeated-secret token=synthetic-repeated-secret");
+        assert repeated.redacted().equals(
+                "<SECRET:ASSIGNED_SECRET:1> <SECRET:ASSIGNED_SECRET:1>");
     }
 }

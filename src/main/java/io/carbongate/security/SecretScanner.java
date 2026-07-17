@@ -1,7 +1,9 @@
 package io.carbongate.security;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,13 +24,16 @@ public final class SecretScanner {
         String redacted = input;
         List<String> findings = new ArrayList<>();
         AtomicInteger counter = new AtomicInteger();
+        Map<String, String> placeholders = new HashMap<>();
         for (SecretPattern secretPattern : PATTERNS) {
             Matcher matcher = secretPattern.pattern.matcher(redacted);
             StringBuffer output = new StringBuffer();
             boolean found = false;
             while (matcher.find()) {
                 found = true;
-                String placeholder = "<SECRET:" + secretPattern.name + ":" + counter.incrementAndGet() + ">";
+                String key = secretPattern.name + "\u0000" + matcher.group();
+                String placeholder = placeholders.computeIfAbsent(key, ignored ->
+                        "<SECRET:" + secretPattern.name + ":" + counter.incrementAndGet() + ">");
                 matcher.appendReplacement(output, Matcher.quoteReplacement(placeholder));
             }
             matcher.appendTail(output);
