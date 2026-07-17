@@ -38,6 +38,9 @@ THE SOFTWARE.
 
 The operating system, shell, JDK, and external programs launched by a user are
 not distributed as part of CarbonGate and retain their respective licenses.
+The optional Container Sandbox Provider can invoke a user-installed Docker or
+Podman CLI. CarbonGate does not download, bundle, or redistribute either
+program; users remain responsible for its license and security updates.
 
 This file must be updated before a third-party component, copied source,
 generated client, binary, container base image, or bundled asset is distributed.

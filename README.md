@@ -20,6 +20,7 @@ approval for risky operations.
 | Build an optional enterprise component | [Enterprise Component Host](docs/enterprise-components.md) |
 | Write a data-only sensitive-data rule Pack | [Rule Packs v1](docs/rule-packs.md) |
 | Inspect sensitive data with an optional Provider | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
+| Run commands in an optional container Sandbox | [Container Sandbox Provider](docs/container-sandbox.md) |
 
 ## What CarbonGate provides
 
