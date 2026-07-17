@@ -1,9 +1,12 @@
 package io.carbongate.gateway;
 
-import io.carbongate.audit.AuditLog;
+import io.carbongate.audit.SecurityEventLog;
+import io.carbongate.authorization.AuthorizationStore;
+import io.carbongate.config.SettingsStore;
 import io.carbongate.json.Json;
-import io.carbongate.policy.PolicyEngine;
 import io.carbongate.policy.PolicyProfile;
+import io.carbongate.policy.EnforcementMode;
+import io.carbongate.runtime.GuardService;
 import io.carbongate.sdk.CarbonGateClient;
 import io.carbongate.model.Action;
 import io.carbongate.model.Decision;
@@ -19,9 +22,12 @@ import java.util.Map;
 public final class GatewayTest {
     public static void run() throws Exception {
         Path workspace = Files.createTempDirectory("carbon-gateway-");
-        try (CarbonGateway gateway = new CarbonGateway(0, workspace,
-                new PolicyEngine(PolicyProfile.BALANCED),
-                new AuditLog(workspace.resolve("audit.jsonl")));
+        Path home = Files.createTempDirectory("carbon-gateway-home-");
+        SettingsStore settings = new SettingsStore(home);
+        AuthorizationStore approvals = new AuthorizationStore(home);
+        SecurityEventLog events = new SecurityEventLog(home);
+        GuardService guard = new GuardService(PolicyProfile.BALANCED, settings, approvals, events);
+        try (CarbonGateway gateway = new CarbonGateway(0, workspace, guard);
              HttpClient client = HttpClient.newHttpClient()) {
             gateway.start();
             URI endpoint = URI.create("http://127.0.0.1:" + gateway.port() + "/v1/evaluate");
@@ -33,7 +39,7 @@ public final class GatewayTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             assert response.statusCode() == 200;
             assert Json.object(response.body()).get("decision").equals("deny");
-            assert Files.readString(workspace.resolve("audit.jsonl")).contains("\"decision\":\"deny\"");
+            assert Files.readString(events.blockedPath()).contains("\"type\":\"blocked\"");
 
             HttpRequest workspaceOverride = HttpRequest.newBuilder(endpoint)
                     .header("content-type", "application/json")
@@ -63,14 +69,18 @@ public final class GatewayTest {
                     .build();
             HttpResponse<String> egressResponse = client.send(egress, HttpResponse.BodyHandlers.ofString());
             assert Json.object(egressResponse.body()).get("decision").equals("deny");
-            String audit = Files.readString(workspace.resolve("audit.jsonl"));
+            String audit = Files.readString(events.blockedPath());
             assert !audit.contains(syntheticSecret);
             assert audit.contains("<SECRET:ASSIGNED_SECRET:");
 
             try (CarbonGateClient sdk = new CarbonGateClient(
                     URI.create("http://127.0.0.1:" + gateway.port()))) {
                 assert sdk.evaluate(Action.shell("git status", workspace)).decision() == Decision.ALLOW;
+                settings.setMode(EnforcementMode.BLOCK);
+                assert sdk.evaluate(Action.shell("git status", workspace)).decision() == Decision.DENY;
             }
+            assert events.todayStats().blockedEvents() == 4;
+            assert events.todayStats().internalErrors() == 0;
         }
     }
 }

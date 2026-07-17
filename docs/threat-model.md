@@ -28,7 +28,11 @@ MCP proxy rejects dangerous tool calls before forwarding them to the server.
 - File path checks reduce traversal and symlink escapes but do not replace mount
   namespaces and are not a complete defense against filesystem race conditions.
 - The local HTTP API has no remote authentication and binds to loopback only.
-- Audit logs are append-only by convention but are not cryptographically signed.
+- Blocked/error logs are not cryptographically signed. They deliberately omit
+  allow, warning, and pending-approval events and stop at 1,000,000 bytes/day.
+- The preceding minimal-log guarantee applies to local-agent mode. Explicit
+  enterprise audit records all decisions in a separate configured sink and has
+  its own capacity and retention obligations.
 
 ## Safe deployment
 

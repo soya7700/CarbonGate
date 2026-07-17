@@ -29,6 +29,8 @@ LAUNCHER="$PREFIX/bin/carbon"
 } > "$LAUNCHER"
 chmod +x "$LAUNCHER"
 
+"$LAUNCHER" config init >/dev/null
+
 printf 'Installed CarbonGate to %s\n' "$LAUNCHER"
 case ":$PATH:" in
   *":$PREFIX/bin:"*) ;;

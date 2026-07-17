@@ -29,5 +29,19 @@ public final class PolicyEngineTest {
 
         PolicyEngine audit = new PolicyEngine(PolicyProfile.AUDIT);
         assert audit.evaluate(Action.shell("rm -rf /", workspace)).decision() == Decision.ASK;
+
+        PolicyEngine warning = new PolicyEngine(PolicyProfile.BALANCED, EnforcementMode.WARN);
+        assert warning.evaluate(Action.shell("rm -rf /", workspace)).decision() == Decision.ALLOW;
+        PolicyEngine approval = new PolicyEngine(PolicyProfile.BALANCED, EnforcementMode.APPROVAL);
+        assert approval.evaluate(Action.shell("git status", workspace)).decision() == Decision.ASK;
+        PolicyEngine block = new PolicyEngine(PolicyProfile.BALANCED, EnforcementMode.BLOCK);
+        assert block.evaluate(Action.shell("git status", workspace)).decision() == Decision.DENY;
+
+        PolicyEngine disabled = new PolicyEngine(PolicyProfile.BALANCED, EnforcementMode.BALANCED,
+                new RuleConfiguration(false, false, false, false));
+        var disabledResult = disabled.evaluate(Action.shell(
+                "rm -rf / password=synthetic-disabled-secret", workspace));
+        assert disabledResult.decision() == Decision.ALLOW;
+        assert !disabledResult.sanitizedResource().contains("synthetic-disabled-secret");
     }
 }

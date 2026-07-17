@@ -18,7 +18,7 @@ test "$java_spec" -ge 21 || {
 
 find "$ROOT/src/main/java" "$ROOT/src/test/java" -name '*.java' -print > "$LINT_OUT/sources.txt"
 mkdir -p "$LINT_OUT/classes"
-javac --release 21 -Xlint:all -encoding UTF-8 -d "$LINT_OUT/classes" @"$LINT_OUT/sources.txt"
+javac --release 21 -Xlint:all -Werror -encoding UTF-8 -d "$LINT_OUT/classes" @"$LINT_OUT/sources.txt"
 
 "$ROOT/scripts/test.sh"
 "$ROOT/scripts/build.sh"
