@@ -160,6 +160,68 @@ carbon rules
 
 ## 2. 接入 Codex、OpenClaw 或 MCP 宿主
 
+### 推荐：CLI 一条命令接入
+
+安装后，只要 `carbon` 已加入 `PATH`，macOS、Linux 和 Windows 使用同一套
+命令：
+
+```bash
+# 自动识别已安装的受支持宿主，并且每个只配置一次
+carbon setup
+
+# 明确指定需要接入的宿主
+carbon setup --host codex,claude,openclaw
+
+# 只预览，不修改宿主配置
+carbon setup --host codex --dry-run
+
+# 查看接入状态并进行健康检查
+carbon integrations list
+carbon doctor
+```
+
+PowerShell 参数完全相同；如果安装目录还没有加入用户 `Path`，请使用
+`carbon.cmd`。
+
+当前已实现自动适配的 CLI：
+
+| 宿主 | 识别的命令 | 配置范围 | 当前覆盖等级 |
+|---|---|---|---|
+| OpenAI Codex CLI | `codex` | 宿主用户配置 | 仅控制面 |
+| Claude Code | `claude` | 用户级 | 仅控制面 |
+| OpenClaw | `openclaw` | 宿主配置 | 仅控制面 |
+| Qoder CLI | `qodercli` | 用户级 | 仅控制面 |
+| CodeBuddy / WorkBuddy CLI | `codebuddy` | 宿主配置 | 仅控制面 |
+| Gemini CLI | `gemini` | 用户级 | 仅控制面 |
+| GitHub Copilot CLI | `copilot` | 宿主配置 | 仅控制面 |
+
+`carbon setup` 会以固定名称 `carbongate` 注册无第三方依赖的
+`carbon mcp serve` 控制服务。安装过程具备幂等性：CarbonGate 已管理的配置
+不会重复添加；检测到同名但不属于 CarbonGate 的外部配置时只报告冲突，绝不
+覆盖。新增后会再次校验，校验失败就自动回滚。管理权记录在
+`~/.carbongate/integrations/registry.json`，也会随 `CARBON_HOME` 改变。
+只删除 CarbonGate 自己管理的配置：
+
+```bash
+carbon integrations remove codex
+```
+
+接入后，可以直接对兼容宿主说“查询 CarbonGate 最近拦截事项”“列出待授权
+操作”或“把 CarbonGate 切换为每次授权”。控制服务提供状态、规则、完全拦截
+记录、批准/拒绝和自然语言等级切换工具。
+
+> [!IMPORTANT]
+> 当前自动接入等级是 `CONTROL_ONLY`（仅控制面）：它让宿主能够查询和控制
+> CarbonGate，但不会自动拦住宿主自带的 Shell、文件或网络工具。需要真正
+> 执行拦截时，请通过下面的 MCP 代理、`carbon exec`、Java API 或 HTTP 网关
+> 传递操作。
+
+WorkBuddy 桌面端、Coze/扣子等暂时没有可确认的稳定本地 MCP 注册 CLI，当前
+通过产品里的“添加 MCP Server”界面配置 `carbon mcp serve`。在厂商提供稳定
+CLI 或配置契约前，这些产品保持引导式接入，避免错误修改用户配置。
+
+### 保护已有 MCP Server
+
 CarbonGate 通过代理包装已有的 stdio MCP Server。把原服务命令放在 `--` 后：
 
 ```text
@@ -360,10 +422,14 @@ carbon blocked [--limit 20]
 carbon approvals list|approve <id>|deny <id>
 carbon mode show|set <自然语言级别>
 carbon control "自然语言级别指令"
+carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]
+carbon integrations list|remove <host>
+carbon doctor
 carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
 carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
 carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
 carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
+carbon mcp serve
 carbon redact TEXT
 carbon run [--workspace PATH] -- AGENT [ARGS...]
 carbon version

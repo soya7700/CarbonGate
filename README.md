@@ -167,6 +167,72 @@ overwrites an existing `carbon.conf`.
 
 ## 2. Integrate Codex, OpenClaw, or an MCP host
 
+### Recommended: one-command CLI setup
+
+The same command works on macOS, Linux, and Windows after `carbon` is on
+`PATH`:
+
+```bash
+# Detect installed supported hosts and configure each one once
+carbon setup
+
+# Select hosts explicitly
+carbon setup --host codex,claude,openclaw
+
+# Preview without changing host configuration
+carbon setup --host codex --dry-run
+
+# Inspect and repair an installation
+carbon integrations list
+carbon doctor
+```
+
+PowerShell uses the same arguments; invoke `carbon.cmd` if the installation
+directory has not yet been added to `Path`.
+
+The current automatic adapters are:
+
+| Host | Detected executable | Setup scope | Current coverage |
+|---|---|---|---|
+| OpenAI Codex CLI | `codex` | host user configuration | Control plane only |
+| Claude Code | `claude` | user | Control plane only |
+| OpenClaw | `openclaw` | host configuration | Control plane only |
+| Qoder CLI | `qodercli` | user | Control plane only |
+| CodeBuddy / WorkBuddy CLI | `codebuddy` | host configuration | Control plane only |
+| Gemini CLI | `gemini` | user | Control plane only |
+| GitHub Copilot CLI | `copilot` | host configuration | Control plane only |
+
+`carbon setup` registers the dependency-free `carbon mcp serve` control
+server under the stable name `carbongate`. It is idempotent: an entry already
+managed by CarbonGate is left unchanged. An existing same-name entry not owned
+by CarbonGate is reported as a conflict and never overwritten. A newly added
+entry is verified, and a failed verification is rolled back. Ownership is
+stored in `~/.carbongate/integrations/registry.json` (or the active
+`CARBON_HOME`). Remove only an owned entry with:
+
+```bash
+carbon integrations remove codex
+```
+
+After setup, a compatible host can answer requests such as “show CarbonGate
+blocked actions”, “list pending CarbonGate approvals”, or “switch CarbonGate
+to require approval every time”. The control server exposes status, rules,
+blocked events, approval/denial, and natural-language mode tools.
+
+> [!IMPORTANT]
+> Automatic setup in this version is `CONTROL_ONLY`. It makes CarbonGate
+> query and control tools available to the host; it does not automatically
+> intercept that host's built-in shell, file, or network tools. Route an MCP
+> server through the proxy below, use `carbon exec`, or integrate the Java/HTTP
+> API when enforcement is required.
+
+GUI and cloud products without a stable local MCP registration CLI, including
+WorkBuddy desktop and Coze/扣子 environments, use their product's “Add MCP
+server” UI and the `carbon mcp serve` command. Their automatic adapters remain
+guided until a stable vendor CLI/config contract can be verified.
+
+### Protect an existing MCP server
+
 CarbonGate wraps an existing stdio MCP server. Put the original server command
 after `--`:
 
@@ -372,10 +438,14 @@ carbon blocked [--limit 20]
 carbon approvals list|approve <id>|deny <id>
 carbon mode show|set <natural-language level>
 carbon control "natural-language level instruction"
+carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]
+carbon integrations list|remove <host>
+carbon doctor
 carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
 carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
 carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
 carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
+carbon mcp serve
 carbon redact TEXT
 carbon run [--workspace PATH] -- AGENT [ARGS...]
 carbon version

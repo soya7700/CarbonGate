@@ -28,6 +28,17 @@ grep -F 'config init' "$ROOT/scripts/install.ps1" >/dev/null
 "$CARBON" config set rules.network.enabled true >/dev/null
 "$CARBON" status | grep -F '"mode":"balanced"' >/dev/null
 "$CARBON" rules | grep -F '只记录 ERROR' >/dev/null
+"$CARBON" integrations list | grep -F '"host":"codex"' >/dev/null
+"$CARBON" integrations list | grep -F '"host":"openclaw"' >/dev/null
+"$CARBON" integrations list | grep -F '"coverage":"control_only"' >/dev/null
+
+mcp_initialize='{"jsonrpc":"2.0","id":100,"method":"initialize","params":{}}'
+mcp_tools='{"jsonrpc":"2.0","id":101,"method":"tools/list","params":{}}'
+mcp_status='{"jsonrpc":"2.0","id":102,"method":"tools/call","params":{"name":"carbon_status","arguments":{}}}'
+control_response=$(printf '%s\n%s\n%s\n' "$mcp_initialize" "$mcp_tools" "$mcp_status" | "$CARBON" mcp serve)
+printf '%s\n' "$control_response" | grep -F '"name":"carbongate-control"' >/dev/null
+printf '%s\n' "$control_response" | grep -F '"name":"carbon_set_mode"' >/dev/null
+printf '%s\n' "$control_response" | grep -F 'dailyLogByteLimit\":10000000' >/dev/null
 
 safe_result=$("$CARBON" check --workspace "$WORKSPACE" -- 'git status')
 printf '%s\n' "$safe_result" | grep -F '"decision":"allow"' >/dev/null

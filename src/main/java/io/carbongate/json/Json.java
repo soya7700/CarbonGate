@@ -181,8 +181,10 @@ public final class Json {
             if (start == position) throw error("Expected JSON value");
             String text = input.substring(start, position);
             try {
-                return text.contains(".") || text.contains("e") || text.contains("E")
-                        ? Double.parseDouble(text) : Long.parseLong(text);
+                if (text.contains(".") || text.contains("e") || text.contains("E")) {
+                    return Double.parseDouble(text);
+                }
+                return Long.parseLong(text);
             } catch (NumberFormatException e) {
                 throw error("Invalid number");
             }
