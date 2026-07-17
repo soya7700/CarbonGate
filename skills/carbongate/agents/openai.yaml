@@ -1,0 +1,4 @@
+interface:
+  display_name: "CarbonGate"
+  short_description: "Install and control protected AI agent routes"
+  default_prompt: "Use $carbongate to protect the current project with CarbonGate."

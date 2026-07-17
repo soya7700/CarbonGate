@@ -16,6 +16,7 @@ tar -tzf "$TAR" | grep -F "carbongate-$VERSION/install.sh" >/dev/null
 tar -tzf "$TAR" | grep -F "carbongate-$VERSION/install.ps1" >/dev/null
 jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/bin/carbon.cmd" >/dev/null
 jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/README-CN.md" >/dev/null
+jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/skills/carbongate/SKILL.md" >/dev/null
 
 INSTALL_PREFIX="$ROOT/build/package-test-prefix"
 CARBON_HOME="$ROOT/build/package-test-home" \

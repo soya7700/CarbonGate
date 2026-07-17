@@ -32,6 +32,7 @@ public final class InstallationDoctor {
         checks.add(invocationCheck());
         checks.add(registryCheck());
         checks.add(mcpProfileRegistryCheck());
+        checks.add(protectionRegistryCheck());
         List<Map<String, Object>> hostChecks;
         try {
             hostChecks = integrations.doctor();
@@ -139,6 +140,17 @@ public final class InstallationDoctor {
             return check("mcp_profile_registry", "pass", "protected MCP profile registry is readable; routes: " + count);
         } catch (IOException | RuntimeException error) {
             return check("mcp_profile_registry", "fail", "protected MCP profile registry cannot be read: "
+                    + compact(error.getMessage()));
+        }
+    }
+
+    private Map<String, Object> protectionRegistryCheck() {
+        ProtectedRouteRegistry protections = new ProtectedRouteRegistry(home);
+        try {
+            int count = protections.entries().size();
+            return check("protection_registry", "pass", "protected route registry is readable; routes: " + count);
+        } catch (IOException | RuntimeException error) {
+            return check("protection_registry", "fail", "protected route registry cannot be read: "
                     + compact(error.getMessage()));
         }
     }

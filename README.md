@@ -107,6 +107,8 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 - Refuses to overwrite an external same-name `carbongate` MCP entry
 - Verifies each registration and rolls it back if verification fails
 - Downloads no runtime dependencies and adds no background service
+- Installs the bundled CarbonGate Skill when Codex is selected and no existing
+  same-name Skill is present
 
 Use `--prefix PATH` on macOS/Linux or `-Prefix PATH` on Windows to choose
 another installation directory. Omit `--setup`/`-Setup` when CarbonGate should
@@ -334,6 +336,27 @@ server” UI and the `carbon mcp serve` command. Their automatic adapters remain
 guided until a stable vendor CLI/config contract can be verified.
 
 ### Protect an existing MCP server
+
+For Codex, the recommended reference workflow is the bundled CarbonGate Skill.
+It inspects the intended upstream command and calls the same atomic CLI flow:
+
+```bash
+carbon protect /absolute/project/path --name filesystem --host codex -- npx some-mcp-server
+carbon protections
+carbon unprotect filesystem --host codex
+```
+
+The command refuses unmanaged same-name entries, verifies the Codex
+registration, and rolls back the MCP profile when verification fails. Preview
+without writing CarbonGate or host state with `--dry-run`.
+
+For any generic stdio MCP host, use `--host generic`. CarbonGate stores the
+protected route and returns a portable descriptor but does not claim to edit
+the host:
+
+```bash
+carbon protect /absolute/project/path --name filesystem --host generic -- npx some-mcp-server
+```
 
 The recommended MCP enforcement path is a reusable protected route. Create it
 once, then export a small descriptor for Codex, OpenClaw, WorkBuddy, or any
@@ -576,6 +599,9 @@ carbon approvals list|approve <id>|deny <id>
 carbon mode show|set <natural-language level>
 carbon control "natural-language level instruction"
 carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]
+carbon protect [WORKSPACE] --name NAME [--host codex|generic] [--dry-run] -- SERVER [ARGS...]
+carbon protections [list]
+carbon unprotect <name> [--host codex|generic]
 carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]
 carbon doctor
 carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND

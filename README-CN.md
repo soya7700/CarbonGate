@@ -104,6 +104,7 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 - 发现外部同名 `carbongate` MCP 配置时拒绝覆盖
 - 新增注册后立即校验，失败时自动回滚
 - 不下载运行时依赖，不安装后台常驻服务
+- 选择 Codex 时安装包内置的 CarbonGate Skill；已有同名 Skill 时不覆盖
 
 macOS/Linux 使用 `--prefix PATH`、Windows 使用 `-Prefix PATH` 可以指定安装
 目录。不希望修改任何 AI 宿主配置时，省略 `--setup`/`-Setup` 即可。
@@ -320,6 +321,25 @@ WorkBuddy 桌面端、Coze/扣子等暂时没有可确认的稳定本地 MCP 注
 CLI 或配置契约前，这些产品保持引导式接入，避免错误修改用户配置。
 
 ### 保护已有 MCP Server
+
+Codex 推荐使用安装包内置的 CarbonGate Skill。Skill 会先识别需要包装的上游
+命令，再调用同一套原子 CLI 流程：
+
+```bash
+carbon protect /absolute/project/path --name filesystem --host codex -- npx some-mcp-server
+carbon protections
+carbon unprotect filesystem --host codex
+```
+
+命令会拒绝不属于 CarbonGate 的同名配置，新增后验证 Codex 注册，验证失败时
+回滚 MCP 路由。使用 `--dry-run` 可以预览且不写入 CarbonGate 或宿主状态。
+
+其他 stdio MCP 宿主使用 `--host generic`。CarbonGate 会保存受保护路由并返回
+可移植描述，但不会声称已经修改宿主：
+
+```bash
+carbon protect /absolute/project/path --name filesystem --host generic -- npx some-mcp-server
+```
 
 推荐使用可复用的“受保护 MCP 路由”。只需创建一次，再为 Codex、OpenClaw、
 WorkBuddy 或其他本地 stdio MCP 宿主导出配置：
@@ -555,6 +575,9 @@ carbon approvals list|approve <id>|deny <id>
 carbon mode show|set <自然语言级别>
 carbon control "自然语言级别指令"
 carbon setup [--host HOST[,HOST...]] [--all] [--dry-run]
+carbon protect [WORKSPACE] --name NAME [--host codex|generic] [--dry-run] -- SERVER [ARGS...]
+carbon protections [list]
+carbon unprotect <name> [--host codex|generic]
 carbon integrations list|remove <host>|guide <host>|export <host> [--format FORMAT]
 carbon doctor
 carbon check [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
