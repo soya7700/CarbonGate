@@ -8,7 +8,7 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 VERSION=${1:-0.2.0}
 STAGE="$ROOT/build/carbongate-$VERSION"
 mkdir -p "$STAGE/bin" "$STAGE/config" "$STAGE/docs"
-cp "$ROOT/build/carbongate.jar" "$ROOT/build/carbon" "$STAGE/bin/"
+cp "$ROOT/build/carbongate.jar" "$ROOT/build/carbon" "$ROOT/build/carbon.cmd" "$STAGE/bin/"
 cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$ROOT/THIRD_PARTY_NOTICES.md" "$STAGE/"
 cp "$ROOT/README.md" "$ROOT/README-CN.md" "$ROOT/SECURITY.md" "$STAGE/"
 cp "$ROOT/config/carbon.conf.example" "$STAGE/config/"

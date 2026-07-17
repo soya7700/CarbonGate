@@ -11,6 +11,13 @@ test -x "$CARBON" || {
   printf 'CarbonGate executable is missing; run scripts/build.sh first.\n' >&2
   exit 1
 }
+test -s "$ROOT/build/carbon.cmd"
+grep -F 'carbongate.jar' "$ROOT/build/carbon.cmd" >/dev/null
+grep -F '%*' "$ROOT/build/carbon.cmd" >/dev/null
+test -s "$ROOT/scripts/install.ps1"
+grep -F -- '--release 21' "$ROOT/scripts/install.ps1" >/dev/null
+grep -F 'carbon.cmd' "$ROOT/scripts/install.ps1" >/dev/null
+grep -F 'config init' "$ROOT/scripts/install.ps1" >/dev/null
 
 "$CARBON" version | grep -F 'CarbonGate 0.2.0 (Java 21)' >/dev/null
 "$CARBON" config init | grep -F '"status":"created"' >/dev/null
