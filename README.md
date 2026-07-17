@@ -18,6 +18,7 @@ approval for risky operations.
 | Add checks to a Java 21 application | [Java integration](#4-integrate-a-java-21-application) |
 | Enable detailed enterprise audit | [Enterprise audit](#enterprise-detailed-audit) |
 | Build an optional enterprise component | [Enterprise Component Host](docs/enterprise-components.md) |
+| Write a data-only sensitive-data rule Pack | [Rule Packs v1](docs/rule-packs.md) |
 
 ## What CarbonGate provides
 

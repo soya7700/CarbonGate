@@ -49,6 +49,7 @@ The repository verifies these budgets automatically:
 - Runtime dependencies: JDK 21 only.
 - Enterprise implementation packages must not appear in the base JAR.
 - Optional Enterprise Component Host JAR: at most 153,600 bytes.
+- First-party data-only Pack: at most 51,200 bytes.
 
 An intentional budget increase requires a separate architecture decision and
 must not be hidden inside a feature change.

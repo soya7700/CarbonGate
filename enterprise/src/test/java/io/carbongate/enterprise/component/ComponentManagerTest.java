@@ -125,7 +125,8 @@ public final class ComponentManagerTest {
     }
 
     private static Path packComponent(Path directory) throws Exception {
-        byte[] policy = "{\"rules\":[]}".getBytes(StandardCharsets.UTF_8);
+        byte[] policy = Json.stringify(Map.of("apiVersion", PackDocument.API_VERSION, "rules", List.of()))
+                .getBytes(StandardCharsets.UTF_8);
         String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(policy));
         Map<String, Object> manifest = new LinkedHashMap<>();
         manifest.put("apiVersion", ComponentManifest.API_VERSION);
@@ -138,10 +139,10 @@ public final class ComponentManagerTest {
         try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(archive))) {
             entry(output, "manifest.json", Json.stringify(manifest));
             entry(output, "checksums.json", Json.stringify(Map.of("algorithm", "SHA-256",
-                    "files", Map.of("payload/policy.json", hash))));
+                    "files", Map.of("payload/pack.json", hash))));
             entry(output, "LICENSE", "Apache License 2.0 test fixture");
             entry(output, "NOTICE", "CarbonGate test pack");
-            entry(output, "payload/policy.json", policy);
+            entry(output, "payload/pack.json", policy);
         }
         return archive;
     }

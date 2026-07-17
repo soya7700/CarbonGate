@@ -16,4 +16,6 @@ java -ea -cp "$OUT/carbongate.jar:$OUT/enterprise-classes:$TEST_CLASSES" \
   io.carbongate.enterprise.EnterpriseAllTests
 
 "$OUT/carbon-enterprise" version | grep -F 'protocol v1, Java 21' >/dev/null
+"$ROOT/scripts/build-pack.sh" >/dev/null
+test -s "$OUT/sensitive-data-baseline-1.0.0.carbon"
 printf 'CarbonGate Enterprise Component Host verification passed.\n'

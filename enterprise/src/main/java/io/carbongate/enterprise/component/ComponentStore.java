@@ -51,6 +51,9 @@ public final class ComponentStore {
             requireFile(staging.resolve("checksums.json"));
             ComponentManifest manifest = ComponentManifest.read(staging.resolve("manifest.json"));
             verifyChecksums(staging);
+            if (manifest.kind() == ComponentManifest.Kind.PACK) {
+                PackDocument.read(staging.resolve("payload").resolve("pack.json"));
+            }
             Path target = componentDirectory(manifest.id(), manifest.version());
             if (Files.exists(target)) throw new IllegalArgumentException("Component version is already installed");
             Files.createDirectories(target.getParent());
@@ -135,6 +138,11 @@ public final class ComponentStore {
 
     public Path root() {
         return root;
+    }
+
+    public Path activeDirectory(String id) throws IOException {
+        ComponentManifest manifest = requireActive(id);
+        return componentDirectory(id, manifest.version());
     }
 
     private Map<String, String> activeVersions() throws IOException {

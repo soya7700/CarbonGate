@@ -17,6 +17,7 @@ CarbonGate 在命令或工具调用执行前进行评估，应用工作区和网
 | 集成到 Java 21 业务应用 | [Java 项目集成](#4-集成-java-21-项目) |
 | 启用企业详细审计 | [企业详细审计](#企业详细审计) |
 | 开发可选企业组件 | [Enterprise Component Host](docs/enterprise-components.md) |
+| 编写纯数据的敏感规则包 | [Rule Packs v1](docs/rule-packs.md) |
 
 ## 核心能力
 

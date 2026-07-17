@@ -1,0 +1,13 @@
+{
+  "apiVersion": "carbongate.io/v1",
+  "kind": "pack",
+  "metadata": {"id": "sensitive-data-baseline", "version": "1.0.0"},
+  "spec": {
+    "entrypoint": [],
+    "operations": [],
+    "permissions": [],
+    "timeoutMillis": 100,
+    "failureMode": "fail_closed"
+  },
+  "license": {"spdx": "Apache-2.0"}
+}
