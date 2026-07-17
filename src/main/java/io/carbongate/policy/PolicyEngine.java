@@ -18,15 +18,28 @@ import java.util.UUID;
 
 public final class PolicyEngine {
     private final PolicyProfile profile;
+    private final EnforcementMode mode;
+    private final RuleConfiguration rules;
     private final ShellRiskAnalyzer shellAnalyzer;
     private final SecretScanner secretScanner;
 
     public PolicyEngine(PolicyProfile profile) {
-        this(profile, new ShellRiskAnalyzer(), new SecretScanner());
+        this(profile, EnforcementMode.BALANCED);
     }
 
-    public PolicyEngine(PolicyProfile profile, ShellRiskAnalyzer shellAnalyzer, SecretScanner secretScanner) {
+    public PolicyEngine(PolicyProfile profile, EnforcementMode mode) {
+        this(profile, mode, RuleConfiguration.allEnabled());
+    }
+
+    public PolicyEngine(PolicyProfile profile, EnforcementMode mode, RuleConfiguration rules) {
+        this(profile, mode, rules, new ShellRiskAnalyzer(), new SecretScanner());
+    }
+
+    public PolicyEngine(PolicyProfile profile, EnforcementMode mode, RuleConfiguration rules,
+                        ShellRiskAnalyzer shellAnalyzer, SecretScanner secretScanner) {
         this.profile = profile;
+        this.mode = mode;
+        this.rules = rules;
         this.shellAnalyzer = shellAnalyzer;
         this.secretScanner = secretScanner;
     }
@@ -35,12 +48,21 @@ public final class PolicyEngine {
         List<String> findings = new ArrayList<>();
         RiskLevel risk;
 
-        if (action.capability() == Capability.SHELL) {
+        if (action.capability() == Capability.SHELL && !rules.shell()) {
+            risk = RiskLevel.LOW;
+            findings.add("shell rules disabled by configuration");
+        } else if (action.capability() == Capability.SHELL) {
             RiskAssessment assessment = shellAnalyzer.analyze(action.resource());
             risk = assessment.risk();
             findings.addAll(assessment.findings());
+        } else if (action.capability() == Capability.FILESYSTEM && !rules.filesystem()) {
+            risk = RiskLevel.LOW;
+            findings.add("filesystem rules disabled by configuration");
         } else if (action.capability() == Capability.FILESYSTEM) {
             risk = evaluateFile(action, findings);
+        } else if (action.capability() == Capability.NETWORK && !rules.network()) {
+            risk = RiskLevel.LOW;
+            findings.add("network rules disabled by configuration");
         } else if (action.capability() == Capability.NETWORK) {
             risk = evaluateNetwork(action, findings);
         } else {
@@ -49,13 +71,13 @@ public final class PolicyEngine {
         }
 
         SecretScanner.ScanResult secrets = secretScanner.scan(action.resource());
-        if (secrets.containsSecrets()) {
+        if (rules.secrets() && secrets.containsSecrets()) {
             findings.add("sensitive value detected: " + String.join(", ", secrets.findings()));
             if (action.capability() == Capability.NETWORK) risk = RiskLevel.CRITICAL;
             else if (risk.ordinal() < RiskLevel.HIGH.ordinal()) risk = RiskLevel.HIGH;
         }
 
-        Decision decision = profile.decide(risk);
+        Decision decision = mode.decide(profile, risk);
         String reason = reason(decision, risk, findings);
         return new Evaluation(
                 UUID.randomUUID().toString(),
@@ -104,7 +126,8 @@ public final class PolicyEngine {
     }
 
     private String reason(Decision decision, RiskLevel risk, List<String> findings) {
-        return decision.name().toLowerCase() + " by " + profile.name().toLowerCase() +
-                " policy: " + risk.name().toLowerCase() + " risk; " + findings.getFirst();
+        return decision.name().toLowerCase() + " by " + mode.name().toLowerCase() +
+                " mode (" + profile.name().toLowerCase() + " profile): " +
+                risk.name().toLowerCase() + " risk; " + findings.getFirst();
     }
 }

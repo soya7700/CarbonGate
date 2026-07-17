@@ -12,6 +12,14 @@ import java.util.regex.Pattern;
  * replacement for an OS sandbox.
  */
 public final class ShellRiskAnalyzer {
+    private static final List<String> CATALOG = List.of(
+            "critical: root deletion, filesystem formatting, raw device writes, shutdown, fork bombs",
+            "critical: downloaded content piped directly into a shell",
+            "high: privilege escalation, recursive deletion, destructive Git operations",
+            "high: permission changes, protected-path writes, dynamic eval, outbound uploads",
+            "medium: package installation, shell -c, network downloads, redirection, compound commands",
+            "low: commands with no elevated-risk pattern"
+    );
     private static final List<Rule> RULES = List.of(
             critical("recursive deletion targeting the filesystem root",
                     "(^|[;&|]\s*)rm\\s+[^;|]*(?:-[a-zA-Z]*r[a-zA-Z]*f|-{1,2}recursive[^;|]*-{1,2}force|-{1,2}force[^;|]*-{1,2}recursive)[^;|]*\\s+(?:/|~|\\$HOME)(?:\\s|$)"),
@@ -51,6 +59,10 @@ public final class ShellRiskAnalyzer {
         }
         if (findings.isEmpty()) findings.add("no elevated-risk shell pattern detected");
         return new RiskAssessment(risk, findings);
+    }
+
+    public static List<String> catalog() {
+        return CATALOG;
     }
 
     private static Rule critical(String finding, String regex) {

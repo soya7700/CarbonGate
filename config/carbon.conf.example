@@ -1,0 +1,18 @@
+# CarbonGate configuration (UTF-8)
+mode=BALANCED
+
+# Security rule switches. Disabling a rule reduces protection and should be reviewed.
+rules.shell.enabled=true
+rules.filesystem.enabled=true
+rules.network.enabled=true
+rules.secrets.enabled=true
+
+# LOCAL_MINIMAL is the default for Codex, OpenClaw, and local CLI installs.
+# ENTERPRISE_DETAILED records every decision and approval event.
+audit.mode=LOCAL_MINIMAL
+audit.local.dailyLimitBytes=1000000
+audit.enterprise.directory=enterprise-audit
+audit.enterprise.dailyLimitBytes=100000000
+
+# Applies to long-running MCP proxy processes; further console warnings are suppressed.
+alerts.consoleDailyLimit=100

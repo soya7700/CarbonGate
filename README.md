@@ -17,8 +17,10 @@ redacts secrets, and records security decisions.
 - Local HTTP evaluation API
 - Java SDK client with no third-party dependencies
 - MCP stdio proxy for line-delimited JSON-RPC tool calls
-- Interactive CLI authorization and JSONL audit logs
+- Interactive CLI authorization and minimal ERROR-only security logs
 - Strict, balanced, and audit policy profiles
+- Natural-language control modes and one-time approval queue
+- Error-only security logs with a hard 1,000,000-byte daily cap
 
 ## Quick start
 
@@ -67,6 +69,21 @@ Protect an MCP server:
 }
 ```
 
+Query and control CarbonGate through Codex or a terminal:
+
+```bash
+carbon status
+carbon rules
+carbon config init
+carbon blocked --limit 20
+carbon approvals list
+carbon control "切换到每次授权"
+```
+
+See [query, control, approval, and logging](docs/control-and-logging.md) for the
+four control modes, prompt locations, one-time approval flow, and disk-write
+guarantees.
+
 ## CLI
 
 ```text
@@ -76,6 +93,11 @@ carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
 carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
 carbon redact TEXT
 carbon run [--workspace PATH] -- AGENT [ARGS...]
+carbon status
+carbon rules
+carbon blocked [--limit 20]
+carbon approvals list|approve <id>|deny <id>
+carbon control "自然语言级别指令"
 ```
 
 `carbon run` injects `CARBON_ENDPOINT`, `CARBON_WORKSPACE`, and proxy metadata for
@@ -97,6 +119,11 @@ Applications that run CarbonGate in the same JVM can invoke `PolicyEngine`
 directly. Enterprise applications should use `CarbonGateClient` with a sidecar so
 policy and audit upgrades remain independent from the application release.
 
+Enterprise Java services can use `CarbonGateRuntime.enterprise(...)` to enable
+detailed allow/ask/approve/deny auditing explicitly. Local Codex, OpenClaw, and
+CLI installations default to the strict `LOCAL_MINIMAL` audit policy. All rule
+switches and audit selection live in `$CARBON_HOME/carbon.conf`.
+
 A Spring Boot starter and framework-specific adapters are planned after the core
 action and policy contracts stabilize.
 
@@ -113,7 +140,7 @@ security boundary. Reports for suspected vulnerabilities should follow
 ./scripts/build.sh
 ./scripts/functional-test.sh
 ./scripts/verify.sh
-./scripts/package.sh 0.1.0
+./scripts/package.sh 0.2.0
 ```
 
 `scripts/verify.sh` is the single local and CI verification entry point. GitHub
