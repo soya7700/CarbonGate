@@ -39,7 +39,7 @@ public final class GatewayTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             assert response.statusCode() == 200;
             assert Json.object(response.body()).get("decision").equals("deny");
-            assert Files.readString(events.blockedPath()).contains("\"type\":\"blocked\"");
+            assert Files.readString(events.blockedPath()).contains("\"capability\":\"shell\"");
 
             HttpRequest workspaceOverride = HttpRequest.newBuilder(endpoint)
                     .header("content-type", "application/json")

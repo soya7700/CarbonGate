@@ -20,7 +20,7 @@ redacts secrets, and records security decisions.
 - Interactive CLI authorization and minimal ERROR-only security logs
 - Strict, balanced, and audit policy profiles
 - Natural-language control modes and one-time approval queue
-- Error-only security logs with a hard 1,000,000-byte daily cap
+- Compact error-only security logs with a hard 10,000,000-byte daily cap
 
 ## Quick start
 
