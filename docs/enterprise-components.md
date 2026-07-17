@@ -1,8 +1,9 @@
 # Enterprise Component Host v1
 
 The optional Enterprise Component Host is built separately from CarbonGate
-Core. It is experimental infrastructure for future audit, DLP, approval, and
-sandbox components; none of those business modules are bundled yet.
+Core. The repository provides independently packaged DLP, approval, audit, and
+container Sandbox components; none of them is bundled into the lightweight
+Core archive or enabled by default.
 
 ## Build and verify
 
