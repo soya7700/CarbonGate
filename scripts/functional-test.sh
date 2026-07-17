@@ -18,6 +18,10 @@ test -s "$ROOT/scripts/install.ps1"
 grep -F -- '--release 21' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F 'carbon.cmd' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F 'config init' "$ROOT/scripts/install.ps1" >/dev/null
+grep -F -- '--setup' "$ROOT/scripts/install.sh" >/dev/null
+grep -F '[switch]$Setup' "$ROOT/scripts/install.ps1" >/dev/null
+test -x "$ROOT/scripts/install-package.sh"
+test -s "$ROOT/scripts/install-package.ps1"
 
 "$CARBON" version | grep -F 'CarbonGate 0.2.0 (Java 21)' >/dev/null
 "$CARBON" config init | grep -F '"status":"created"' >/dev/null
@@ -31,6 +35,21 @@ grep -F 'config init' "$ROOT/scripts/install.ps1" >/dev/null
 "$CARBON" integrations list | grep -F '"host":"codex"' >/dev/null
 "$CARBON" integrations list | grep -F '"host":"openclaw"' >/dev/null
 "$CARBON" integrations list | grep -F '"coverage":"control_only"' >/dev/null
+"$CARBON" integrations list | grep -F '"host":"generic-stdio"' >/dev/null
+"$CARBON" integrations guide workbuddy-desktop | grep -F '"setupMethod":"guided"' >/dev/null
+"$CARBON" integrations export generic-stdio --format mcp-json | grep -F '"mcpServers"' >/dev/null
+"$CARBON" integrations export generic-stdio --format codex-toml | grep -F 'mcp_servers.carbongate' >/dev/null
+set +e
+coze_result=$("$CARBON" integrations export coze 2>&1)
+coze_status=$?
+set -e
+test "$coze_status" -eq 6
+printf '%s\n' "$coze_result" | grep -F '"remoteTransportRequired":true' >/dev/null
+
+doctor_result=$("$CARBON" doctor || true)
+printf '%s\n' "$doctor_result" | grep -F '"name":"java"' >/dev/null
+printf '%s\n' "$doctor_result" | grep -F '"name":"local_log_limit"' >/dev/null
+printf '%s\n' "$doctor_result" | grep -F '"name":"control_invocation"' >/dev/null
 
 mcp_initialize='{"jsonrpc":"2.0","id":100,"method":"initialize","params":{}}'
 mcp_tools='{"jsonrpc":"2.0","id":101,"method":"tools/list","params":{}}'
@@ -38,6 +57,8 @@ mcp_status='{"jsonrpc":"2.0","id":102,"method":"tools/call","params":{"name":"ca
 control_response=$(printf '%s\n%s\n%s\n' "$mcp_initialize" "$mcp_tools" "$mcp_status" | "$CARBON" mcp serve)
 printf '%s\n' "$control_response" | grep -F '"name":"carbongate-control"' >/dev/null
 printf '%s\n' "$control_response" | grep -F '"name":"carbon_set_mode"' >/dev/null
+printf '%s\n' "$control_response" | grep -F '"name":"carbon_integration_guide"' >/dev/null
+printf '%s\n' "$control_response" | grep -F '"name":"carbon_doctor"' >/dev/null
 printf '%s\n' "$control_response" | grep -F 'dailyLogByteLimit\":10000000' >/dev/null
 
 safe_result=$("$CARBON" check --workspace "$WORKSPACE" -- 'git status')

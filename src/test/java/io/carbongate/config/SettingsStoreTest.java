@@ -4,6 +4,7 @@ import io.carbongate.policy.EnforcementMode;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
 public final class SettingsStoreTest {
     public static void run() throws Exception {
@@ -28,6 +29,12 @@ public final class SettingsStoreTest {
         } catch (IllegalArgumentException expected) {
             // expected
         }
+
+        Files.writeString(settings.path(), "mode=BALANCED\nmode=WARN\nunknown.token=secret\nrules.network.enabled=maybe\n",
+                StandardCharsets.UTF_8);
+        var diagnostics = settings.diagnostics();
+        assert diagnostics.size() == 3;
+        assert diagnostics.stream().noneMatch(value -> value.contains("secret"));
 
         assert EnforcementMode.fromNaturalLanguage("切换到警告提醒") == EnforcementMode.WARN;
         assert EnforcementMode.fromNaturalLanguage("以后每次都要手动授权") == EnforcementMode.APPROVAL;
