@@ -1,0 +1,5 @@
+CarbonGate Container Sandbox Provider
+Copyright 2026 CarbonGate contributors
+
+This optional Sandbox Provider is part of CarbonGate and is licensed under Apache-2.0.
+Docker and Podman are optional user-installed external programs and are not distributed with this component.

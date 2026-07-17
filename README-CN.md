@@ -19,6 +19,7 @@ CarbonGate 在命令或工具调用执行前进行评估，应用工作区和网
 | 开发可选企业组件 | [Enterprise Component Host](docs/enterprise-components.md) |
 | 编写纯数据的敏感规则包 | [Rule Packs v1](docs/rule-packs.md) |
 | 使用可选 Provider 检查敏感数据 | [Sensitive Data Provider](docs/sensitive-data-provider.md) |
+| 使用可选容器 Sandbox 执行命令 | [Container Sandbox Provider](docs/container-sandbox.md) |
 
 ## 核心能力
 

@@ -77,6 +77,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Rule Pack build failed" }
           & .\scripts\build-provider.ps1
           if ($LASTEXITCODE -ne 0) { throw "Sensitive Data Provider build failed" }
+          & .\scripts\build-sandbox.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Container Sandbox Provider build failed" }
 
       - name: Verify prebuilt package installer
         shell: pwsh

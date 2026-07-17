@@ -1,0 +1,13 @@
+{
+  "apiVersion": "carbongate.io/v1",
+  "kind": "sandbox",
+  "metadata": {"id": "container-sandbox", "version": "1.0.0"},
+  "spec": {
+    "entrypoint": ["java", "-jar", "${componentDir}/payload/sandbox.jar"],
+    "operations": ["sandbox"],
+    "permissions": ["container.runtime", "filesystem.workspace", "network.none"],
+    "timeoutMillis": 30000,
+    "failureMode": "fail_closed"
+  },
+  "license": {"spdx": "Apache-2.0"}
+}
