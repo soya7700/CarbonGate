@@ -25,5 +25,6 @@ javac --release 21 -Xlint:all -Werror -encoding UTF-8 -d "$LINT_OUT/classes" @"$
 "$ROOT/scripts/build.sh"
 "$ROOT/scripts/functional-test.sh"
 "$ROOT/scripts/package-test.sh"
+"$ROOT/scripts/lightweight-budget.sh"
 
 printf 'Complete CarbonGate verification passed on Java %s.\n' "$java_spec"

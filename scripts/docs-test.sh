@@ -27,5 +27,7 @@ grep -F 'carbon mcp profile add filesystem' "$ROOT/README.md" >/dev/null
 grep -F 'carbon mcp profile add filesystem' "$ROOT/README-CN.md" >/dev/null
 grep -F '$CARBON_HOME/mcp/profiles.json' "$ROOT/README.md" >/dev/null
 grep -F '$CARBON_HOME/mcp/profiles.json' "$ROOT/README-CN.md" >/dev/null
+grep -F 'docs/architecture.md' "$ROOT/README.md" >/dev/null
+grep -F 'docs/architecture.md' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'

@@ -44,6 +44,8 @@ mount-namespace or Chroot filesystem virtualization are not implemented yet.
 - macOS, Linux, or Windows PowerShell 5.1+
 
 The runtime has no third-party source or runtime dependencies.
+The enforced size, dependency, and component boundaries are documented in
+[the lightweight architecture decision](docs/architecture.md).
 
 ## 1. Recommended: one-command installation
 
