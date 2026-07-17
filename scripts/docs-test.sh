@@ -48,5 +48,15 @@ grep -F 'docs/enterprise-audit-provider.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/enterprise-audit-provider.md' "$ROOT/README-CN.md" >/dev/null
 grep -F 'docs/component-trust.md' "$ROOT/README.md" >/dev/null
 grep -F 'docs/component-trust.md' "$ROOT/README-CN.md" >/dev/null
+grep -F '## Product map' "$ROOT/README.md" >/dev/null
+grep -F '## 产品地图' "$ROOT/README-CN.md" >/dev/null
+grep -F '**CarbonGate Core**' "$ROOT/README.md" >/dev/null
+grep -F '**CarbonGate Core**' "$ROOT/README-CN.md" >/dev/null
+grep -F '**CarbonGate Skill**' "$ROOT/README.md" >/dev/null
+grep -F '**CarbonGate Skill**' "$ROOT/README-CN.md" >/dev/null
+grep -F '## 5. Enterprise components' "$ROOT/README.md" >/dev/null
+grep -F '## 5. 企业组件' "$ROOT/README-CN.md" >/dev/null
+grep -F 'inspect -> authorize -> sandbox' "$ROOT/README.md" >/dev/null
+grep -F 'inspect -> authorize -> sandbox' "$ROOT/README-CN.md" >/dev/null
 
 printf 'README installation order and platform commands verified.\n'
