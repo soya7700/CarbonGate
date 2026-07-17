@@ -2,6 +2,7 @@ package io.carbongate.integration;
 
 import io.carbongate.audit.SecurityEventLog;
 import io.carbongate.config.SettingsStore;
+import io.carbongate.mcp.McpProfileStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +31,7 @@ public final class InstallationDoctor {
         checks.add(logLimitCheck());
         checks.add(invocationCheck());
         checks.add(registryCheck());
+        checks.add(mcpProfileRegistryCheck());
         List<Map<String, Object>> hostChecks;
         try {
             hostChecks = integrations.doctor();
@@ -121,6 +123,23 @@ public final class InstallationDoctor {
             return check("integration_registry", "pass", "registry is readable; managed hosts: " + count);
         } catch (IOException | RuntimeException error) {
             return check("integration_registry", "fail", "registry cannot be read: " + compact(error.getMessage()));
+        }
+    }
+
+    private Map<String, Object> mcpProfileRegistryCheck() {
+        McpProfileStore profiles = new McpProfileStore(home);
+        try {
+            List<McpProfileStore.Profile> routes = profiles.list();
+            long missing = routes.stream().filter(route -> !Files.isDirectory(route.workspace())).count();
+            if (missing > 0) {
+                return check("mcp_profile_registry", "fail", "protected MCP profile registry has "
+                        + missing + " route(s) with a missing workspace");
+            }
+            int count = routes.size();
+            return check("mcp_profile_registry", "pass", "protected MCP profile registry is readable; routes: " + count);
+        } catch (IOException | RuntimeException error) {
+            return check("mcp_profile_registry", "fail", "protected MCP profile registry cannot be read: "
+                    + compact(error.getMessage()));
         }
     }
 

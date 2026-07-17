@@ -333,8 +333,43 @@ guided until a stable vendor CLI/config contract can be verified.
 
 ### Protect an existing MCP server
 
-CarbonGate wraps an existing stdio MCP server. Put the original server command
-after `--`:
+The recommended MCP enforcement path is a reusable protected route. Create it
+once, then export a small descriptor for Codex, OpenClaw, WorkBuddy, or any
+other local stdio MCP host:
+
+```bash
+carbon mcp profile add filesystem \
+  --workspace /absolute/project/path \
+  -- npx some-mcp-server
+carbon mcp profile list
+carbon mcp profile show filesystem
+carbon mcp profile export filesystem --format mcp-json
+```
+
+On Windows, use the same commands in PowerShell with a Windows workspace path
+and the upstream Windows launcher, such as `npx.cmd`. The exported host entry
+runs `carbon mcp profile run filesystem`; every upstream `tools/call` therefore
+passes through CarbonGate. `descriptor`, `mcp-json`, and `codex-toml` exports
+are available, are read-only, and explicitly report `mcp_only` coverage.
+
+Profiles are stored atomically in
+`$CARBON_HOME/mcp/profiles.json` (normally
+`~/.carbongate/mcp/profiles.json`). The registry is capped at 100 profiles and
+1 MiB. It is compact configuration state, not an event log, so it does not
+consume the daily 10 MB local log budget. CarbonGate rejects secret-like
+command arguments and credential options such as `--token` or `--api-key`;
+provide credentials through the upstream process environment instead.
+
+Manage a route without editing host configuration:
+
+```bash
+carbon mcp profile export filesystem --format descriptor
+carbon mcp profile export filesystem --format codex-toml
+carbon mcp profile remove filesystem
+```
+
+For temporary or scripted use, CarbonGate can also wrap an existing stdio MCP
+server directly. Put the original server command after `--`:
 
 ```text
 carbon mcp proxy --workspace /absolute/project/path -- ORIGINAL_SERVER [ARGS...]
@@ -546,6 +581,8 @@ carbon exec [--profile strict|balanced|audit] [--workspace PATH] -- COMMAND
 carbon gateway [--profile PROFILE] [--workspace PATH] [--port 8765]
 carbon mcp proxy [--profile PROFILE] [--workspace PATH] -- SERVER [ARGS...]
 carbon mcp serve
+carbon mcp profile list|show <name>|add <name> [--workspace PATH] [--replace] -- SERVER [ARGS...]
+carbon mcp profile remove|run <name>|export <name> [--format FORMAT]
 carbon redact TEXT
 carbon run [--workspace PATH] -- AGENT [ARGS...]
 carbon version

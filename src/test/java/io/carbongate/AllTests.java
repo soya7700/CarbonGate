@@ -10,6 +10,8 @@ import io.carbongate.integration.IntegrationGuideServiceTest;
 import io.carbongate.integration.InstallationDoctorTest;
 import io.carbongate.json.JsonTest;
 import io.carbongate.mcp.McpControlServerTest;
+import io.carbongate.mcp.McpProfileServiceTest;
+import io.carbongate.mcp.McpProfileStoreTest;
 import io.carbongate.mcp.McpToolClassifierTest;
 import io.carbongate.policy.PolicyEngineTest;
 import io.carbongate.runtime.GuardServiceTest;
@@ -32,6 +34,8 @@ public final class AllTests {
         WarningLimiterTest.run();
         JsonTest.run();
         McpToolClassifierTest.run();
+        McpProfileStoreTest.run();
+        McpProfileServiceTest.run();
         McpControlServerTest.run();
         IntegrationManagerTest.run();
         IntegrationGuideServiceTest.run();

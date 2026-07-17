@@ -26,6 +26,8 @@ public final class McpControlServer {
     private final ControlService controls;
     private final IntegrationGuideService guides;
     private final InstallationDoctor doctor;
+    private final McpProfileStore profiles;
+    private final McpProfileService profileExports;
 
     public McpControlServer(Path home, PolicyProfile profile) {
         controls = new ControlService(home, profile);
@@ -34,6 +36,8 @@ public final class McpControlServer {
                 new SystemCommandRunner(), HostCatalog.all(), invocation);
         guides = new IntegrationGuideService(invocation);
         doctor = new InstallationDoctor(home, integrations, invocation);
+        profiles = new McpProfileStore(home);
+        profileExports = new McpProfileService(profiles);
     }
 
     public int run() throws IOException {
@@ -92,6 +96,13 @@ public final class McpControlServer {
             case "carbon_integration_guide" -> guides.guide(string(arguments, "host"));
             case "carbon_integration_export" -> guides.export(string(arguments, "host"),
                     arguments.get("format") instanceof String format ? format : "descriptor");
+            case "carbon_mcp_profiles" -> Map.of("registry", profiles.path().toString(),
+                    "coverage", "mcp_only",
+                    "profiles", profiles.list().stream().map(McpProfileStore.Profile::map).toList());
+            case "carbon_mcp_profile" -> Map.of("registry", profiles.path().toString(),
+                    "coverage", "mcp_only", "profile", profiles.require(string(arguments, "name")).map());
+            case "carbon_mcp_profile_export" -> profileExports.export(string(arguments, "name"),
+                    arguments.get("format") instanceof String format ? format : "descriptor");
             case "carbon_doctor" -> diagnose();
             default -> throw new IllegalArgumentException("Unknown CarbonGate tool: " + name);
         };
@@ -117,6 +128,11 @@ public final class McpControlServer {
                         requiredSchema("host", "string")),
                 tool("carbon_integration_export", "Export a local stdio MCP descriptor without modifying host configuration",
                         exportSchema()),
+                tool("carbon_mcp_profiles", "List saved protected upstream MCP routes", schema()),
+                tool("carbon_mcp_profile", "Show one saved protected upstream MCP route",
+                        requiredSchema("name", "string")),
+                tool("carbon_mcp_profile_export", "Export a host descriptor that routes one upstream MCP server through CarbonGate",
+                        profileExportSchema()),
                 tool("carbon_doctor", "Check JDK, configuration, log budget, registry, invocation, and host integration health", schema()));
     }
 
@@ -143,6 +159,14 @@ public final class McpControlServer {
                 "host", Map.of("type", "string"),
                 "format", Map.of("type", "string", "enum", List.of("descriptor", "mcp-json", "codex-toml")))));
         value.put("required", List.of("host"));
+        return value;
+    }
+
+    private Map<String, Object> profileExportSchema() {
+        Map<String, Object> value = new LinkedHashMap<>(schema(Map.of(
+                "name", Map.of("type", "string"),
+                "format", Map.of("type", "string", "enum", List.of("descriptor", "mcp-json", "codex-toml")))));
+        value.put("required", List.of("name"));
         return value;
     }
 

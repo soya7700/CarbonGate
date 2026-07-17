@@ -26,6 +26,7 @@ public final class InstallationDoctorTest {
         assert output.contains("local_log_limit");
         assert output.contains("10000000");
         assert output.contains("control_invocation");
+        assert output.contains("mcp_profile_registry");
 
         Files.createDirectories(registry.path().getParent());
         Files.writeString(registry.path(), "not-json", StandardCharsets.UTF_8);

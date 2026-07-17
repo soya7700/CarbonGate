@@ -14,9 +14,26 @@ carbon doctor
 This registers `carbon mcp serve`, which provides `carbon_status`,
 `carbon_rules`, `carbon_blocked`, `carbon_approvals`, `carbon_approve`,
 `carbon_deny_approval`, `carbon_set_mode`, `carbon_integrations`,
-`carbon_integration_guide`, `carbon_integration_export`, and `carbon_doctor`.
+`carbon_integration_guide`, `carbon_integration_export`, `carbon_mcp_profiles`,
+`carbon_mcp_profile`, `carbon_mcp_profile_export`, and `carbon_doctor`.
 This is a control-plane integration and does not claim to intercept a host's
 built-in tools.
+
+The three MCP profile tools are intentionally read-only. Profile creation and
+removal stay explicit local CLI actions:
+
+```bash
+carbon mcp profile add source-control --workspace /project -- source-mcp --stdio
+carbon mcp profile list
+carbon mcp profile export source-control --format mcp-json
+carbon mcp profile remove source-control
+```
+
+An exported profile invokes `carbon mcp profile run <name>` and has `mcp_only`
+coverage: CarbonGate enforces upstream MCP `tools/call` traffic, but does not
+claim to intercept the host's built-in tools. Profile state is a capped,
+atomic configuration file, not a decision log. Secret-like command content and
+credential flags are rejected before the file is written.
 
 ## Query commands
 
