@@ -10,12 +10,12 @@ for required in LICENSE NOTICE THIRD_PARTY_NOTICES.md docs/dependency-policy.md;
   }
 done
 
-if find "$ROOT/src" -name '*.jar' -o -name '*.class' | grep -q .; then
+if find "$ROOT/src" "$ROOT/enterprise/src" \( -name '*.jar' -o -name '*.class' \) | grep -q .; then
   printf 'Compiled or bundled binary found under src; review third-party provenance.\n' >&2
   exit 1
 fi
 
-imports=$(find "$ROOT/src" -name '*.java' -exec sed -n 's/^import \([^;]*\);/\1/p' {} \; | \
+imports=$(find "$ROOT/src" "$ROOT/enterprise/src" -name '*.java' -exec sed -n 's/^import \([^;]*\);/\1/p' {} \; | \
   grep -Ev '^(java\.|javax\.|jdk\.|com\.sun\.net\.httpserver\.|io\.carbongate\.)' || true)
 if test -n "$imports"; then
   printf 'Undeclared non-JDK imports detected:\n%s\n' "$imports" >&2

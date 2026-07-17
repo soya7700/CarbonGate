@@ -28,6 +28,8 @@ check_bytes 'Base JAR' "$JAR" 204800
 check_bytes 'Base tar.gz' "$TAR" 512000
 check_bytes 'Base zip' "$ZIP" 512000
 check_bytes 'Default configuration' "$CONFIG" 4096
+test -s "$ROOT/build/carbongate-enterprise-host.jar" || "$ROOT/scripts/build-enterprise.sh" >/dev/null
+check_bytes 'Enterprise Component Host' "$ROOT/build/carbongate-enterprise-host.jar" 153600
 
 if jar --list --file "$JAR" | grep -q '^io/carbongate/enterprise/'; then
   printf 'Enterprise implementation leaked into the base JAR.\n' >&2
