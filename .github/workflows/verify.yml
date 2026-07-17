@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4, MIT
         with:
           distribution: temurin
-          java-version: "21.0.11+10"
+          java-version: "21"
 
       - name: Run complete verification
         run: ./scripts/verify.sh
@@ -52,7 +52,7 @@ jobs:
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4, MIT
         with:
           distribution: temurin
-          java-version: "21.0.11+10"
+          java-version: "21"
 
       - name: Verify source installer
         shell: pwsh
