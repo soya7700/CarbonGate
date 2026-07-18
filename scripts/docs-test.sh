@@ -23,6 +23,10 @@ grep -F '.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openc
 grep -F '.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT/README-CN.md" >/dev/null
 grep -F 'No Java runtime for a prebuilt native local installation' "$ROOT/README.md" >/dev/null
 grep -F '预构建原生本地安装不需要 Java 运行时' "$ROOT/README-CN.md" >/dev/null
+grep -F 'Java 21 is the product source, bytecode, JVM runtime, and enterprise integration' "$ROOT/README.md" >/dev/null
+grep -F 'Java 21 是项目源码、字节码、JVM 运行时和企业集成的统一基线' "$ROOT/README-CN.md" >/dev/null
+grep -F 'GraalVM Community 25.1.3 only as the current' "$ROOT/README.md" >/dev/null
+grep -F 'GraalVM Community 25.1.3 作为当前开源 Native Image 打包器' "$ROOT/README-CN.md" >/dev/null
 grep -F 'carbon mcp profile add filesystem' "$ROOT/README.md" >/dev/null
 grep -F 'carbon mcp profile add filesystem' "$ROOT/README-CN.md" >/dev/null
 grep -F '$CARBON_HOME/mcp/profiles.json' "$ROOT/README.md" >/dev/null

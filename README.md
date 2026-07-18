@@ -55,6 +55,11 @@ Enterprise path
 - JDK 21 (`java`, `javac`, and `jar`) and Git only for source, JVM, or enterprise builds
 - macOS, Linux, or Windows PowerShell 5.1+
 
+Java 21 is the product source, bytecode, JVM runtime, and enterprise integration
+baseline. Release automation uses GraalVM Community 25.1.3 only as the current
+open-source Native Image builder; the resulting native CLI has no JDK runtime
+dependency and does not change CarbonGate's Java 21 compatibility baseline.
+
 Core and first-party components have no third-party source or runtime library
 dependencies. The Container Sandbox can invoke a user-installed Docker or
 Podman CLI; neither is downloaded or redistributed.
