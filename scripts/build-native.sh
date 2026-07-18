@@ -10,8 +10,26 @@ if command -v native-image >/dev/null 2>&1; then
 elif command -v native-image.cmd >/dev/null 2>&1; then
   NATIVE_IMAGE=native-image.cmd
 else
-  printf '%s\n' 'native-image was not found. Use GraalVM Community Native Image to build the local CLI.' >&2
-  exit 1
+  NATIVE_IMAGE=
+  for runtime_home in "${GRAALVM_HOME:-}" "${JAVA_HOME:-}"; do
+    test -n "$runtime_home" || continue
+    case "$(uname -s)" in
+      MINGW*|MSYS*|CYGWIN*)
+        command -v cygpath >/dev/null 2>&1 && runtime_home=$(cygpath -u "$runtime_home")
+        ;;
+    esac
+    for executable in native-image native-image.cmd; do
+      candidate="$runtime_home/bin/$executable"
+      if test -f "$candidate"; then
+        NATIVE_IMAGE=$candidate
+        break 2
+      fi
+    done
+  done
+  test -n "$NATIVE_IMAGE" || {
+    printf '%s\n' 'native-image was not found. Use GraalVM Community Native Image to build the local CLI.' >&2
+    exit 1
+  }
 fi
 
 "$ROOT/scripts/build.sh" >/dev/null
