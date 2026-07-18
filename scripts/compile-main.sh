@@ -30,8 +30,18 @@ mkdir -p "$OUT" "$(dirname -- "$GENERATED")"
     '}'
 } > "$GENERATED"
 
-find "$ROOT/src/main/java" -name '*.java' -print > "$SOURCES"
-printf '%s\n' "$GENERATED" >> "$SOURCES"
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    find "$ROOT/src/main/java" -name '*.java' -print | while IFS= read -r source; do
+      printf '"%s"\n' "$(cygpath -m "$source")"
+    done > "$SOURCES"
+    printf '"%s"\n' "$(cygpath -m "$GENERATED")" >> "$SOURCES"
+    ;;
+  *)
+    find "$ROOT/src/main/java" -name '*.java' -print > "$SOURCES"
+    printf '%s\n' "$GENERATED" >> "$SOURCES"
+    ;;
+esac
 # CARBON_JAVAC_FLAGS is controlled by repository verification scripts.
 # shellcheck disable=SC2086
 javac --release 21 -encoding UTF-8 ${CARBON_JAVAC_FLAGS:-} -d "$OUT" @"$SOURCES"
