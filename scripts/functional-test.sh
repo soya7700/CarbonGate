@@ -18,6 +18,7 @@ test -s "$ROOT/scripts/install.ps1"
 test -s "$ROOT/scripts/compile-main.ps1"
 grep -F -- '--release 21' "$ROOT/scripts/compile-main.ps1" >/dev/null
 grep -F 'compile-main.ps1' "$ROOT/scripts/install.ps1" >/dev/null
+grep -F 'native-image.cmd' "$ROOT/scripts/build-native.sh" >/dev/null
 grep -F 'carbon.cmd' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F 'config init' "$ROOT/scripts/install.ps1" >/dev/null
 grep -F -- '--setup' "$ROOT/scripts/install.sh" >/dev/null
