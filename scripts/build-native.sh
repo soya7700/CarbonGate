@@ -5,17 +5,21 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 OUT="$ROOT/build/native"
 TEMP="$ROOT/build/native-tmp"
 
-command -v native-image >/dev/null 2>&1 || {
+if command -v native-image >/dev/null 2>&1; then
+  NATIVE_IMAGE=native-image
+elif command -v native-image.cmd >/dev/null 2>&1; then
+  NATIVE_IMAGE=native-image.cmd
+else
   printf '%s\n' 'native-image was not found. Use GraalVM Community Native Image to build the local CLI.' >&2
   exit 1
-}
+fi
 
 "$ROOT/scripts/build.sh" >/dev/null
 rm -rf "$OUT" "$TEMP"
 mkdir -p "$OUT" "$TEMP"
 (
   cd "$OUT"
-  TMPDIR="$TEMP" native-image -J-Djava.io.tmpdir="$TEMP" -O2 \
+  TMPDIR="$TEMP" "$NATIVE_IMAGE" -J-Djava.io.tmpdir="$TEMP" -O2 \
     -jar "$ROOT/build/carbongate.jar" carbon
 )
 
