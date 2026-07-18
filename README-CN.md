@@ -50,8 +50,8 @@ CarbonGate 在命令或 MCP Tool Call 执行前进行评估，限制文件和网
 
 ## 环境要求
 
-- 预构建本地安装需要 Java 21 或更高版本
-- 源码或企业组件构建需要 JDK 21（`java`、`javac`、`jar`）和 Git
+- 预构建原生本地安装不需要 Java 运行时
+- 只有源码、JVM 或企业组件构建需要 JDK 21（`java`、`javac`、`jar`）和 Git
 - macOS、Linux 或 Windows PowerShell 5.1+
 
 Core 和第一方组件不依赖第三方源码或运行时库。Container Sandbox 可以调用
@@ -59,21 +59,23 @@ Core 和第一方组件不依赖第三方源码或运行时库。Container Sandb
 
 ## 1. 推荐：一键安装
 
-普通本地 Agent 推荐使用预构建安装包。各平台包含相同的以 JDK 21 为目标的
-JAR、启动器、配置、Skill、文档和开源许可声明。
+从 [GitHub 最新 Release](https://github.com/soya7700/CarbonGate/releases/latest)
+下载与平台匹配的原生安装包。安装包包含自带运行能力的 `carbon`、配置、Skill、
+文档、校验文件和开源许可声明，不要求用户安装 Java。
 
 ### macOS 和 Linux
 
-解压 `.tar.gz` 后运行：
+Apple Silicon 下载 `carbongate-VERSION-darwin-arm64.tar.gz`，x64 Linux 下载
+`carbongate-VERSION-linux-x64.tar.gz`，根据 `SHA256SUMS` 校验并解压后运行：
 
 ```bash
-./carbongate-VERSION/install.sh --setup
+./carbongate-VERSION-PLATFORM/install.sh --setup
 ```
 
 只配置指定宿主：
 
 ```bash
-./carbongate-VERSION/install.sh --host codex,claude,openclaw
+./carbongate-VERSION-PLATFORM/install.sh --host codex,claude,openclaw
 ```
 
 默认命令为 `~/.local/bin/carbon`。当前终端找不到时：
@@ -84,16 +86,17 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ### Windows
 
-解压 `.zip`，打开 PowerShell 后运行：
+下载 `carbongate-VERSION-windows-x64.zip`，根据 `SHA256SUMS` 校验并解压，
+打开 PowerShell 后运行：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION\install.ps1 -Setup
+powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION-windows-x64\install.ps1 -Setup
 ```
 
 只配置指定宿主：
 
 ```powershell
-.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"
+.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"
 ```
 
 在当前终端立即使用：
@@ -106,7 +109,7 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 
 安装器会：
 
-- 安装前验证以 JDK 21 为目标的 JAR；
+- 安装前验证原生可执行文件；
 - 保留已有 `carbon.conf`；
 - 每个检测到的宿主最多注册一次；
 - 不覆盖不属于 CarbonGate 的同名 `carbongate` 配置；
@@ -119,11 +122,14 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 
 | 项目 | macOS/Linux | Windows |
 |---|---|---|
-| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd` |
-| Core JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
+| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.exe` |
+| Java 运行时 | 不需要 | 不需要 |
 | 状态/配置 | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
 
 所有平台都可用 `CARBON_HOME` 覆盖状态目录。
+
+Release 同时保留 `carbongate-VERSION.tar.gz` 和 `.zip` 便携 JAR 包，供已有
+Java 21 环境、macOS Intel 和企业评估使用。
 
 ### 安装后验证
 

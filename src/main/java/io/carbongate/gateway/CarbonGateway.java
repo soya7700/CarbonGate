@@ -1,5 +1,6 @@
 package io.carbongate.gateway;
 
+import io.carbongate.BuildInfo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import io.carbongate.json.Json;
@@ -47,7 +48,7 @@ public final class CarbonGateway implements AutoCloseable {
             respond(exchange, 405, Map.of("error", "method_not_allowed"));
             return;
         }
-        respond(exchange, 200, Map.of("status", "ok", "version", "0.2.0",
+        respond(exchange, 200, Map.of("status", "ok", "version", BuildInfo.VERSION,
                 "mode", guard.mode().name().toLowerCase()));
     }
 

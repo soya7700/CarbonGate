@@ -16,9 +16,11 @@ test "$java_spec" -ge 21 || {
   exit 1
 }
 
-find "$ROOT/src/main/java" "$ROOT/src/test/java" -name '*.java' -print > "$LINT_OUT/sources.txt"
 mkdir -p "$LINT_OUT/classes"
-javac --release 21 -Xlint:all -Werror -encoding UTF-8 -d "$LINT_OUT/classes" @"$LINT_OUT/sources.txt"
+CARBON_JAVAC_FLAGS='-Xlint:all -Werror' "$ROOT/scripts/compile-main.sh" "$LINT_OUT/classes"
+find "$ROOT/src/test/java" -name '*.java' -print > "$LINT_OUT/test-sources.txt"
+javac --release 21 -Xlint:all -Werror -encoding UTF-8 -cp "$LINT_OUT/classes" \
+  -d "$LINT_OUT/classes" @"$LINT_OUT/test-sources.txt"
 
 "$ROOT/scripts/test.sh"
 "$ROOT/scripts/docs-test.sh"

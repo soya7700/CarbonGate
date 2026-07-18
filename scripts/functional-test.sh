@@ -31,7 +31,8 @@ fi
 test -x "$ROOT/scripts/install-package.sh"
 test -s "$ROOT/scripts/install-package.ps1"
 
-"$CARBON" version | grep -F 'CarbonGate 0.2.0 (Java 21)' >/dev/null
+VERSION=$(tr -d '[:space:]' < "$ROOT/VERSION")
+"$CARBON" version | grep -F "CarbonGate $VERSION (Java " >/dev/null
 "$CARBON" config init | grep -F '"status":"created"' >/dev/null
 "$CARBON" config show | grep -F '"audit.mode":"LOCAL_MINIMAL"' >/dev/null
 "$CARBON" config show | grep -F '"audit.local.dailyLimitBytes":"10000000"' >/dev/null
@@ -55,7 +56,7 @@ test "$coze_status" -eq 6
 printf '%s\n' "$coze_result" | grep -F '"remoteTransportRequired":true' >/dev/null
 
 doctor_result=$("$CARBON" doctor || true)
-printf '%s\n' "$doctor_result" | grep -F '"name":"java"' >/dev/null
+printf '%s\n' "$doctor_result" | grep -F '"name":"runtime"' >/dev/null
 printf '%s\n' "$doctor_result" | grep -F '"name":"local_log_limit"' >/dev/null
 printf '%s\n' "$doctor_result" | grep -F '"name":"control_invocation"' >/dev/null
 printf '%s\n' "$doctor_result" | grep -F '"name":"mcp_profile_registry"' >/dev/null

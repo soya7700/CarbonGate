@@ -7,8 +7,7 @@ CLASSES="$OUT/classes"
 
 rm -rf "$OUT"
 mkdir -p "$CLASSES"
-find "$ROOT/src/main/java" -name '*.java' -print > "$OUT/sources.txt"
-javac --release 21 -encoding UTF-8 -d "$CLASSES" @"$OUT/sources.txt"
+"$ROOT/scripts/compile-main.sh" "$CLASSES"
 jar --create --file "$OUT/carbongate.jar" --main-class io.carbongate.cli.CarbonCli -C "$CLASSES" .
 
 cat > "$OUT/carbon" <<'EOF'

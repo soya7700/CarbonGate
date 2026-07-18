@@ -2,7 +2,8 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-VERSION=0.2.0-test
+PROJECT_VERSION=$(tr -d '[:space:]' < "$ROOT/VERSION")
+VERSION="$PROJECT_VERSION-test"
 
 CARBON_SKIP_TESTS=1 "$ROOT/scripts/package.sh" "$VERSION" >/dev/null
 
@@ -21,7 +22,7 @@ jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/skills/carbongate/SKILL.
 INSTALL_PREFIX="$ROOT/build/package-test-prefix"
 CARBON_HOME="$ROOT/build/package-test-home" \
   "$ROOT/build/carbongate-$VERSION/install.sh" --prefix "$INSTALL_PREFIX" >/dev/null
-"$INSTALL_PREFIX/bin/carbon" version | grep -F 'CarbonGate 0.2.0 (Java 21)' >/dev/null
+"$INSTALL_PREFIX/bin/carbon" version | grep -F "CarbonGate $PROJECT_VERSION (Java " >/dev/null
 CARBON_HOME="$ROOT/build/package-test-home" \
   "$INSTALL_PREFIX/bin/carbon" config set mode WARN >/dev/null
 CARBON_HOME="$ROOT/build/package-test-home" \
