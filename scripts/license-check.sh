@@ -32,6 +32,22 @@ if test -d "$ROOT/.github/workflows"; then
     printf 'Unapproved or unpinned GitHub Actions detected:\n%s\n' "$unapproved" >&2
     exit 1
   fi
+
+  for workflow in verify.yml release.yml; do
+    workflow_path="$ROOT/.github/workflows/$workflow"
+    grep -F 'version: "25.1"' "$workflow_path" >/dev/null || {
+      printf '%s must select the GraalVM Community 25.1 native builder line.\n' "$workflow" >&2
+      exit 1
+    }
+    grep -F 'java-version: "25.0.3"' "$workflow_path" >/dev/null || {
+      printf '%s must pin the native builder JDK patch level.\n' "$workflow" >&2
+      exit 1
+    }
+    grep -F 'distribution: graalvm-community' "$workflow_path" >/dev/null || {
+      printf '%s must retain the open-source GraalVM Community distribution.\n' "$workflow" >&2
+      exit 1
+    }
+  done
 fi
 
 printf 'License check passed: no undeclared Java, binary, or CI dependencies.\n'

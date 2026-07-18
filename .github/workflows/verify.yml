@@ -125,9 +125,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4, MIT
 
-      - name: Install pinned GraalVM Community Native Image
+      - name: Install GraalVM Community 25.1 native builder
         uses: graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd # v1, UPL-1.0
         with:
+          version: "25.1"
           java-version: "25.0.3"
           distribution: graalvm-community
           github-token: ${{ secrets.GITHUB_TOKEN }}

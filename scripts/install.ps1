@@ -22,16 +22,7 @@ if (Test-Path $Build) {
 }
 New-Item -ItemType Directory -Force -Path $Classes | Out-Null
 
-$Sources = Get-ChildItem (Join-Path $Root "src\main\java") -Recurse -Filter "*.java" |
-    Select-Object -ExpandProperty FullName
-if ($Sources.Count -eq 0) {
-    throw "No Java source files were found."
-}
-
-& javac --release 21 -encoding UTF-8 -d $Classes $Sources
-if ($LASTEXITCODE -ne 0) {
-    throw "CarbonGate compilation failed."
-}
+& (Join-Path $PSScriptRoot "compile-main.ps1") -OutputDirectory $Classes
 
 & jar --create --file $Jar --main-class io.carbongate.cli.CarbonCli -C $Classes .
 if ($LASTEXITCODE -ne 0) {

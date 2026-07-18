@@ -54,6 +54,10 @@ CarbonGate 在命令或 MCP Tool Call 执行前进行评估，限制文件和网
 - 只有源码、JVM 或企业组件构建需要 JDK 21（`java`、`javac`、`jar`）和 Git
 - macOS、Linux 或 Windows PowerShell 5.1+
 
+Java 21 是项目源码、字节码、JVM 运行时和企业集成的统一基线。Release 自动化仅
+使用 GraalVM Community 25.1.3 作为当前开源 Native Image 打包器；生成的原生 CLI
+不依赖 JDK 运行时，也不会改变 CarbonGate 的 Java 21 兼容基线。
+
 Core 和第一方组件不依赖第三方源码或运行时库。Container Sandbox 可以调用
 用户自行安装的 Docker 或 Podman CLI；CarbonGate 不下载也不分发它们。
 
