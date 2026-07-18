@@ -7,7 +7,8 @@ if test "${CARBON_SKIP_TESTS:-0}" != 1; then
 fi
 "$ROOT/scripts/build.sh"
 
-VERSION=${1:-0.2.0}
+PROJECT_VERSION=$(tr -d '[:space:]' < "$ROOT/VERSION")
+VERSION=${1:-$PROJECT_VERSION}
 STAGE="$ROOT/build/carbongate-$VERSION"
 mkdir -p "$STAGE/bin" "$STAGE/config" "$STAGE/docs" "$STAGE/skills/carbongate/agents"
 cp "$ROOT/build/carbongate.jar" "$ROOT/build/carbon" "$ROOT/build/carbon.cmd" "$STAGE/bin/"

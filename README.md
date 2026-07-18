@@ -51,8 +51,8 @@ Enterprise path
 
 ## Requirements
 
-- Java 21 or newer for a prebuilt local installation
-- JDK 21 (`java`, `javac`, and `jar`) and Git for source or enterprise builds
+- No Java runtime for a prebuilt native local installation
+- JDK 21 (`java`, `javac`, and `jar`) and Git only for source, JVM, or enterprise builds
 - macOS, Linux, or Windows PowerShell 5.1+
 
 Core and first-party components have no third-party source or runtime library
@@ -61,22 +61,25 @@ Podman CLI; neither is downloaded or redistributed.
 
 ## 1. Recommended: one-command installation
 
-Use a prebuilt CarbonGate archive for normal local-Agent use. It contains the
-same JDK 21-targeted JAR, launchers, configuration, Skill, documentation, and
-license notices on every platform.
+Download the matching native archive from the
+[latest GitHub Release](https://github.com/soya7700/CarbonGate/releases/latest).
+It contains a self-contained `carbon` executable, configuration, Skill,
+documentation, checksums, and license notices. It does not require Java.
 
 ### macOS and Linux
 
-Extract the `.tar.gz` archive and run:
+Download `carbongate-VERSION-darwin-arm64.tar.gz` for Apple Silicon or
+`carbongate-VERSION-linux-x64.tar.gz` for x64 Linux; verify it against
+`SHA256SUMS`, extract it, and run:
 
 ```bash
-./carbongate-VERSION/install.sh --setup
+./carbongate-VERSION-PLATFORM/install.sh --setup
 ```
 
 Configure only selected hosts:
 
 ```bash
-./carbongate-VERSION/install.sh --host codex,claude,openclaw
+./carbongate-VERSION-PLATFORM/install.sh --host codex,claude,openclaw
 ```
 
 The default CLI is `~/.local/bin/carbon`. If needed in the current shell:
@@ -87,16 +90,17 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ### Windows
 
-Extract the `.zip` archive, open PowerShell, and run:
+Download `carbongate-VERSION-windows-x64.zip`, verify it against
+`SHA256SUMS`, extract it, open PowerShell, and run:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION\install.ps1 -Setup
+powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION-windows-x64\install.ps1 -Setup
 ```
 
 Configure only selected hosts:
 
 ```powershell
-.\carbongate-VERSION\install.ps1 -Hosts "codex,claude,openclaw"
+.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"
 ```
 
 Use the CLI immediately in the current terminal:
@@ -109,7 +113,7 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 
 The installer:
 
-- verifies the JDK 21-targeted JAR before installation;
+- verifies the native executable before installation;
 - preserves an existing `carbon.conf`;
 - registers each detected host at most once;
 - never overwrites an unmanaged same-name `carbongate` entry;
@@ -123,11 +127,14 @@ Omit `--setup` or `-Setup` to install without changing host configuration. Use
 
 | Item | macOS/Linux | Windows |
 |---|---|---|
-| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.cmd` |
-| Core JAR | `~/.local/lib/carbongate/carbongate.jar` | `%LOCALAPPDATA%\CarbonGate\lib\carbongate\carbongate.jar` |
+| CLI | `~/.local/bin/carbon` | `%LOCALAPPDATA%\CarbonGate\bin\carbon.exe` |
+| Java runtime | Not required | Not required |
 | State/config | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
 
 Override state on any platform with `CARBON_HOME`.
+
+The portable `carbongate-VERSION.tar.gz` and `.zip` JAR archives remain
+available for Java 21 environments, macOS Intel, and enterprise evaluation.
 
 ### Verify
 

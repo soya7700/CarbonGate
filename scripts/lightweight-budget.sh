@@ -2,7 +2,7 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-VERSION=0.2.0-test
+VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")-test"
 JAR="$ROOT/build/carbongate.jar"
 TAR="$ROOT/build/carbongate-$VERSION.tar.gz"
 ZIP="$ROOT/build/carbongate-$VERSION.zip"

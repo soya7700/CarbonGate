@@ -105,3 +105,37 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Package reinstall failed" }
           $mode = & (Join-Path $prefix "bin\carbon.cmd") mode show
           if ($mode -notmatch '"mode":"warn"') { throw "Package reinstall overwrote carbon.conf" }
+
+  verify-native:
+    name: Native CLI verification (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            platform: linux-x64
+          - os: macos-15
+            platform: darwin-arm64
+          - os: windows-2022
+            platform: windows-x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4, MIT
+
+      - name: Install pinned GraalVM Community Native Image
+        uses: graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd # v1, UPL-1.0
+        with:
+          java-version: "25.0.3"
+          distribution: graalvm-community
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify native executable and release archive
+        shell: bash
+        env:
+          CARBON_PLATFORM: ${{ matrix.platform }}
+        run: |
+          ./scripts/native-test.sh
+          ./scripts/package-native.sh

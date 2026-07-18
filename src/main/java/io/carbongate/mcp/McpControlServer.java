@@ -1,5 +1,6 @@
 package io.carbongate.mcp;
 
+import io.carbongate.BuildInfo;
 import io.carbongate.integration.HostCatalog;
 import io.carbongate.integration.InstallationDoctor;
 import io.carbongate.integration.IntegrationGuideService;
@@ -67,7 +68,7 @@ public final class McpControlServer {
                 case "initialize" -> success(id, Map.of(
                         "protocolVersion", PROTOCOL_VERSION,
                         "capabilities", Map.of("tools", Map.of("listChanged", false)),
-                        "serverInfo", Map.of("name", "carbongate-control", "version", "0.2.0")));
+                        "serverInfo", Map.of("name", "carbongate-control", "version", BuildInfo.VERSION)));
                 case "ping" -> success(id, Map.of());
                 case "tools/list" -> success(id, Map.of("tools", tools()));
                 case "tools/call" -> success(id, call(object(request.get("params"))));

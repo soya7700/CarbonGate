@@ -1,5 +1,6 @@
 package io.carbongate.integration;
 
+import io.carbongate.BuildInfo;
 import io.carbongate.audit.SecurityEventLog;
 import io.carbongate.config.SettingsStore;
 import io.carbongate.mcp.McpProfileStore;
@@ -53,6 +54,9 @@ public final class InstallationDoctor {
     }
 
     private Map<String, Object> javaCheck() {
+        if (BuildInfo.nativeImage()) {
+            return check("runtime", "pass", "native executable; no user-installed Java runtime is required");
+        }
         String version = System.getProperty("java.specification.version", "unknown");
         boolean valid;
         try {
@@ -60,7 +64,7 @@ public final class InstallationDoctor {
         } catch (NumberFormatException ignored) {
             valid = false;
         }
-        return check("java", valid ? "pass" : "fail", "Java " + version + (valid ? " satisfies JDK 21+" : " does not satisfy JDK 21+"));
+        return check("runtime", valid ? "pass" : "fail", "Java " + version + (valid ? " satisfies JDK 21+" : " does not satisfy JDK 21+"));
     }
 
     private Map<String, Object> homeCheck() {

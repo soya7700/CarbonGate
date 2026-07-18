@@ -1,5 +1,6 @@
 package io.carbongate.cli;
 
+import io.carbongate.BuildInfo;
 import io.carbongate.audit.AuditSink;
 import io.carbongate.audit.EnterpriseAuditLog;
 import io.carbongate.audit.SecurityEventLog;
@@ -589,7 +590,7 @@ public final class CarbonCli {
     }
 
     private static int version() {
-        System.out.println("CarbonGate 0.2.0 (Java 21)");
+        System.out.println("CarbonGate " + BuildInfo.VERSION + " (" + BuildInfo.runtimeLabel() + ", Java 21 source)");
         return 0;
     }
 
