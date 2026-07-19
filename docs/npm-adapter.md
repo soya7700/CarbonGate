@@ -14,7 +14,7 @@ CarbonGate GitHub Release, users can run:
 npx @carbongate/cli install
 npx @carbongate/cli setup
 npx @carbongate/cli setup --host codex,claude,openclaw
-npx @carbongate/cli setup --version 0.3.0 --prefix "$HOME/.local"
+npx @carbongate/cli setup --version 0.3.1 --prefix "$HOME/.local"
 ~~~
 
 install never changes an Agent host configuration. setup explicitly installs

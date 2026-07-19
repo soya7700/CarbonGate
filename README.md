@@ -157,7 +157,7 @@ Omit `--setup` or `-Setup` to install without changing host configuration. Use
 
 Override state on any platform with `CARBON_HOME`.
 
-Pin a release with `--version 0.3.0` on macOS/Linux or `-Version 0.3.0` on
+Pin a release with `--version 0.3.1` on macOS/Linux or `-Version 0.3.1` on
 Windows. Offline mirrors can override `CARBONGATE_MANIFEST_URL` and
 `CARBONGATE_RELEASE_BASE_URL`; `file://` sources additionally require the
 explicit `CARBONGATE_ALLOW_FILE_URLS=1` opt-in.

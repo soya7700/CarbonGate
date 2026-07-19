@@ -27,7 +27,7 @@ npx @carbongate/cli setup --host codex,claude,openclaw
 Pin the CarbonGate Release or installation destination:
 
 ```bash
-npx @carbongate/cli install --version 0.3.0 --prefix "$HOME/.local"
+npx @carbongate/cli install --version 0.3.1 --prefix "$HOME/.local"
 ```
 
 The adapter supports macOS Apple Silicon, Linux x64, and Windows x64. Other

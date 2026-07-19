@@ -1,6 +1,6 @@
 {
   "name": "@carbongate/cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Verified npm installer adapter for CarbonGate native releases",
   "license": "Apache-2.0",
   "author": "CarbonGate contributors",

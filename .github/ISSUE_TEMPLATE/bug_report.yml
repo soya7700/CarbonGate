@@ -13,7 +13,7 @@ body:
     attributes:
       label: CarbonGate version
       description: Include native or JVM mode when relevant.
-      placeholder: "0.3.0 (native)"
+      placeholder: "0.3.1 (native)"
     validations:
       required: true
   - type: dropdown
