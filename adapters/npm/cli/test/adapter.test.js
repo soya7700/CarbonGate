@@ -70,7 +70,7 @@ test("npm package dry run contains only the declared adapter surface", async () 
   const cache = await fs.mkdtemp(path.join(os.tmpdir(), "carbongate-npm-cache-"));
   try {
     const result = runCommand(npmCommand(), ["pack", "--dry-run", "--json", "--ignore-scripts"], packageDirectory,
-      { ...process.env, NPM_CONFIG_CACHE: cache });
+      { ...process.env, NPM_CONFIG_CACHE: cache }, { shell: process.platform === "win32" });
     assert.equal(result.status, 0, result.stderr);
     const packagePlan = JSON.parse(result.stdout);
     const files = packagePlan[0].files.map((entry) => entry.path);
@@ -121,7 +121,7 @@ async function writeFixtureInstaller(stage, platform) {
       "param([string]$Prefix, [switch]$Setup, [string]$Hosts)",
       '$ErrorActionPreference = "Stop"',
       "New-Item -ItemType Directory -Force -Path $Prefix | Out-Null",
-      "if ($Hosts) { Set-Content -Encoding ASCII -Path (Join-Path $Prefix 'installed.txt') -Value ('host=' + $Hosts) } else { Set-Content -Encoding ASCII -Path (Join-Path $Prefix 'installed.txt') -Value 'setup' }"
+      "if ($Hosts) { Set-Content -Encoding ASCII -Path (Join-Path $Prefix 'installed.txt') -Value ('host=' + $Hosts) } elseif ($Setup) { Set-Content -Encoding ASCII -Path (Join-Path $Prefix 'installed.txt') -Value 'setup' } else { Set-Content -Encoding ASCII -Path (Join-Path $Prefix 'installed.txt') -Value 'install' }"
     ].join("\n"), "utf8");
     return;
   }
@@ -161,8 +161,8 @@ function runAdapter(argumentsList, environment) {
   return runCommand(process.execPath, [adapterBin, ...argumentsList], packageDirectory, environment);
 }
 
-function runCommand(command, argumentsList, cwd, environment) {
-  return spawnSync(command, argumentsList, { cwd, env: environment, encoding: "utf8" });
+function runCommand(command, argumentsList, cwd, environment, options = {}) {
+  return spawnSync(command, argumentsList, { cwd, env: environment, encoding: "utf8", ...options });
 }
 
 function npmCommand() {
