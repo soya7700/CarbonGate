@@ -2,9 +2,11 @@ package io.carbongate.integration;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public final class IntegrationManagerTest {
@@ -60,6 +62,13 @@ public final class IntegrationManagerTest {
         assert HostCatalog.require("qoder").addCommand(invocation).containsAll(List.of("-s", "user"));
         assert HostCatalog.require("gemini").addCommand(invocation).containsAll(List.of("--scope", "user"));
         assert HostCatalog.all().stream().allMatch(host -> host.coverage() == Coverage.CONTROL_ONLY);
+
+        Path desktopCodex = Files.createTempFile("carbon-codex-desktop-", ".bin");
+        assert desktopCodex.toFile().setExecutable(true);
+        SystemCommandRunner desktopRunner = new SystemCommandRunner(Duration.ofSeconds(1),
+                Map.of("PATH", "", "CODEX_CLI_PATH", desktopCodex.toString()));
+        assert desktopRunner.available("codex");
+        assert desktopRunner.resolveExecutable("codex").equals(desktopCodex);
     }
 
     private static final class FakeRunner implements CommandRunner {
