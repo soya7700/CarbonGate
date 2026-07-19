@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible CarbonGate defect without sensitive data.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve CarbonGate. Do not include credentials,
+        personal data, customer data, or exploit details in this form.
+  - type: input
+    id: version
+    attributes:
+      label: CarbonGate version
+      description: Include native or JVM mode when relevant.
+      placeholder: "0.3.0 (native)"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple Silicon)
+        - Linux (x64)
+        - Windows (x64)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Agent or MCP host
+      description: For example Codex, Claude Code, OpenClaw, or a custom stdio host.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Safe reproduction steps
+      description: Provide the smallest safe example and redact any sensitive values.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and sanitized output
+    validations:
+      required: true
