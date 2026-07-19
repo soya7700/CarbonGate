@@ -12,12 +12,13 @@ are not bundled in CarbonGate artifacts:
 | Component | Pinned version | Source | License |
 |---|---|---|---|
 | actions/checkout | `34e114876b0b11c390a56381ad16ebd13914f8d5` | https://github.com/actions/checkout | MIT |
+| actions/setup-node | `48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e` | https://github.com/actions/setup-node | MIT |
 | actions/setup-java | `c1e323688fd81a25caa38c78aa6df2d33d3e20d9` | https://github.com/actions/setup-java | MIT |
 | graalvm/setup-graalvm | `0def53c0fd8534bc13416c9469f5be45265824fd` | https://github.com/graalvm/setup-graalvm | UPL-1.0 |
 | Eclipse Temurin JDK | `21.0.11+10` | https://github.com/adoptium/temurin21-binaries/releases/tag/jdk-21.0.11%2B10 | GPL-2.0-only with Classpath Exception |
 | GraalVM Community Native Image | `25.1.3 / JDK 25.0.3` | https://github.com/graalvm/graalvm-ce-builds/releases/tag/graal-25.1.3 | GPL-2.0-only with Classpath Exception |
 
-`actions/checkout` and `actions/setup-java` include this notice:
+`actions/checkout`, `actions/setup-node`, and `actions/setup-java` include this notice:
 
 > The MIT License (MIT)
 > Copyright (c) 2018 GitHub, Inc. and contributors

@@ -56,8 +56,19 @@ On Windows:
 .\scripts\package-npm.ps1
 ~~~
 
-Review the .tgz package output and publish only after the matching GitHub
-Release is public:
+Review the .tgz package output. The first public package was published with
+npm 2FA. Later publications use npm Trusted Publishing: a maintainer manually
+dispatches `.github/workflows/npm-publish.yml` from the matching public
+`vVERSION` GitHub Release tag. The workflow verifies the versions, checks that
+the version is not already public, and publishes with an OIDC provenance
+attestation. It never runs automatically on a push, tag, or GitHub Release.
+
+The npm package Settings page must bind its trusted publisher to GitHub user
+`soya7700`, repository `CarbonGate`, and workflow filename `npm-publish.yml`.
+The workflow's `npm-publish` GitHub Environment is the manual approval point.
+
+For emergency bootstrap only, a maintainer with npm 2FA can publish directly
+after the matching GitHub Release is public:
 
 ~~~bash
 cd adapters/npm/cli
@@ -66,6 +77,6 @@ npm publish --access public --provenance
 
 The first scoped publication must explicitly use public access; npm documents
 that scoped packages otherwise default to restricted visibility. See the
-[official scoped public package guidance](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
-and [npm publish reference](https://docs.npmjs.com/cli/publish/). Publication is
-manual; no GitHub workflow publishes to npm.
+[official scoped public package guidance](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/),
+[npm publish reference](https://docs.npmjs.com/cli/publish/), and
+[trusted publishing guidance](https://docs.npmjs.com/trusted-publishers/).

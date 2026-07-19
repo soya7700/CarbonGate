@@ -1,0 +1,73 @@
+name: Manual npm package publication
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published CarbonGate version, without the v prefix
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @carbongate/cli with provenance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: npm-publish
+    steps:
+      - name: Check out the selected release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4, MIT
+
+      - name: Install Node.js for npm trusted publishing
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0, MIT
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Validate the explicit package publication request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          printf '%s\n' "$VERSION_INPUT" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([+-][A-Za-z0-9.-]+)?$'
+          test "$GITHUB_REF" = "refs/tags/v$VERSION_INPUT" || {
+            echo "Dispatch from the matching v$VERSION_INPUT release tag." >&2
+            exit 1
+          }
+          test "$(tr -d '[:space:]' < VERSION)" = "$VERSION_INPUT" || {
+            echo "VERSION does not match the requested package publication." >&2
+            exit 1
+          }
+          package_version=$(node -p "require('./adapters/npm/cli/package.json').version")
+          test "$package_version" = "$VERSION_INPUT" || {
+            echo "The npm adapter version does not match the requested publication." >&2
+            exit 1
+          }
+          test "$(gh release view "v$VERSION_INPUT" --json isDraft --jq .isDraft)" = false || {
+            echo "GitHub Release v$VERSION_INPUT must be public first." >&2
+            exit 1
+          }
+          if npm view "@carbongate/cli@$VERSION_INPUT" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "@carbongate/cli@$VERSION_INPUT is already published." >&2
+            exit 1
+          fi
+
+      - name: Verify npm adapter
+        run: npm --prefix adapters/npm/cli test
+
+      - name: Review package contents
+        run: npm --prefix adapters/npm/cli pack --dry-run --json --ignore-scripts
+
+      - name: Publish through npm trusted publishing
+        working-directory: adapters/npm/cli
+        run: npm publish --access public --provenance --ignore-scripts
