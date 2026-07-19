@@ -238,7 +238,7 @@ carbon integrations list
 carbon doctor
 ```
 
-自动适配器覆盖 Codex CLI、Claude Code、OpenClaw、Qoder、
+自动适配器覆盖 Codex CLI（macOS 上也会识别 ChatGPT 桌面应用内置的 CLI）、Claude Code、OpenClaw、Qoder、
 CodeBuddy/WorkBuddy CLI、Gemini CLI 和 GitHub Copilot CLI。通用 stdio MCP、
 WorkBuddy 桌面端和 Coze/扣子使用引导或描述符：
 

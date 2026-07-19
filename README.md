@@ -249,7 +249,7 @@ carbon integrations list
 carbon doctor
 ```
 
-Automatic adapters currently cover Codex CLI, Claude Code, OpenClaw, Qoder,
+Automatic adapters currently cover Codex CLI (including the bundled CLI in ChatGPT desktop on macOS), Claude Code, OpenClaw, Qoder,
 CodeBuddy/WorkBuddy CLI, Gemini CLI, and GitHub Copilot CLI. Guided descriptors
 are available for generic stdio MCP hosts, WorkBuddy desktop, and Coze/扣子:
 

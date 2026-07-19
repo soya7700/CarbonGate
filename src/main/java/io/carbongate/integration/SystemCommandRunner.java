@@ -110,7 +110,9 @@ public final class SystemCommandRunner implements CommandRunner {
         if (!System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac")) return null;
         List<Path> candidates = List.of(
                 Path.of("/Applications/ChatGPT.app/Contents/Resources/codex"),
-                Path.of(System.getProperty("user.home"), "Applications", "ChatGPT.app", "Contents", "Resources", "codex"));
+                Path.of("/Applications/Codex.app/Contents/Resources/codex"),
+                Path.of(System.getProperty("user.home"), "Applications", "ChatGPT.app", "Contents", "Resources", "codex"),
+                Path.of(System.getProperty("user.home"), "Applications", "Codex.app", "Contents", "Resources", "codex"));
         return candidates.stream().filter(this::executableFile).findFirst().orElse(null);
     }
 
