@@ -15,12 +15,18 @@ test -n "$chinese_source"
 test "$english_recommended" -lt "$english_source"
 test "$chinese_recommended" -lt "$chinese_source"
 
-grep -F './carbongate-VERSION-PLATFORM/install.sh --setup' "$ROOT/README.md" >/dev/null
-grep -F '.\carbongate-VERSION-windows-x64\install.ps1 -Setup' "$ROOT/README.md" >/dev/null
-grep -F './carbongate-VERSION-PLATFORM/install.sh --setup' "$ROOT/README-CN.md" >/dev/null
-grep -F '.\carbongate-VERSION-windows-x64\install.ps1 -Setup' "$ROOT/README-CN.md" >/dev/null
-grep -F '.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT/README.md" >/dev/null
-grep -F '.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"' "$ROOT/README-CN.md" >/dev/null
+grep -F 'scripts/install-release.sh | sh -s -- --setup' "$ROOT/README.md" >/dev/null
+grep -F 'scripts/install-release.sh | sh -s -- --setup' "$ROOT/README-CN.md" >/dev/null
+grep -F "scripts/install-release.ps1'))) -Setup" "$ROOT/README.md" >/dev/null
+grep -F "scripts/install-release.ps1'))) -Setup" "$ROOT/README-CN.md" >/dev/null
+grep -F 'scripts/install-release.sh | sh -s -- --host codex,claude,openclaw' "$ROOT/README.md" >/dev/null
+grep -F 'scripts/install-release.sh | sh -s -- --host codex,claude,openclaw' "$ROOT/README-CN.md" >/dev/null
+grep -F 'ROADMAP.md' "$ROOT/README.md" >/dev/null
+grep -F 'ROADMAP-CN.md' "$ROOT/README-CN.md" >/dev/null
+grep -F '`@carbongate/cli`' "$ROOT/ROADMAP.md" >/dev/null
+grep -F '`@carbongate/cli`' "$ROOT/ROADMAP-CN.md" >/dev/null
+grep -F '`soya7700/homebrew-tap`' "$ROOT/ROADMAP.md" >/dev/null
+grep -F '`soya7700/homebrew-tap`' "$ROOT/ROADMAP-CN.md" >/dev/null
 grep -F 'No Java runtime for a prebuilt native local installation' "$ROOT/README.md" >/dev/null
 grep -F '预构建原生本地安装不需要 Java 运行时' "$ROOT/README-CN.md" >/dev/null
 grep -F 'Java 21 is the product source, bytecode, JVM runtime, and enterprise integration' "$ROOT/README.md" >/dev/null

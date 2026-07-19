@@ -25,7 +25,8 @@ independent components that are installed only when needed.
 | **Sandbox** | Container-backed command isolation | No |
 
 The architecture deliberately keeps enterprise code out of the Core JAR. See
-[the lightweight architecture boundary](docs/architecture.md).
+[the lightweight architecture boundary](docs/architecture.md) and the
+[delivery roadmap](ROADMAP.md).
 
 ```text
 Local Agent path
@@ -52,6 +53,7 @@ Enterprise path
 ## Requirements
 
 - No Java runtime for a prebuilt native local installation
+- `curl`, `tar`, and `shasum` or `sha256sum` for the macOS/Linux bootstrap
 - JDK 21 (`java`, `javac`, and `jar`) and Git only for source, JVM, or enterprise builds
 - macOS, Linux, or Windows PowerShell 5.1+
 
@@ -66,25 +68,23 @@ Podman CLI; neither is downloaded or redistributed.
 
 ## 1. Recommended: one-command installation
 
-Download the matching native archive from the
-[latest GitHub Release](https://github.com/soya7700/CarbonGate/releases/latest).
-It contains a self-contained `carbon` executable, configuration, Skill,
-documentation, checksums, and license notices. It does not require Java.
+The bootstrap selects the matching native archive from the
+[latest GitHub Release](https://github.com/soya7700/CarbonGate/releases/latest),
+verifies its published SHA-256 value, and runs the installer inside that
+archive. It does not require Java or start a background service.
 
 ### macOS and Linux
 
-Download `carbongate-VERSION-darwin-arm64.tar.gz` for Apple Silicon or
-`carbongate-VERSION-linux-x64.tar.gz` for x64 Linux; verify it against
-`SHA256SUMS`, extract it, and run:
+Apple Silicon macOS and x64 Linux:
 
 ```bash
-./carbongate-VERSION-PLATFORM/install.sh --setup
+curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.sh | sh -s -- --setup
 ```
 
 Configure only selected hosts:
 
 ```bash
-./carbongate-VERSION-PLATFORM/install.sh --host codex,claude,openclaw
+curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.sh | sh -s -- --host codex,claude,openclaw
 ```
 
 The default CLI is `~/.local/bin/carbon`. If needed in the current shell:
@@ -95,17 +95,16 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ### Windows
 
-Download `carbongate-VERSION-windows-x64.zip`, verify it against
-`SHA256SUMS`, extract it, open PowerShell, and run:
+Open PowerShell on x64 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION-windows-x64\install.ps1 -Setup
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.ps1'))) -Setup
 ```
 
 Configure only selected hosts:
 
 ```powershell
-.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.ps1'))) -Hosts "codex,claude,openclaw"
 ```
 
 Use the CLI immediately in the current terminal:
@@ -116,7 +115,8 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 
 ### Installer behavior
 
-The installer:
+The bootstrap downloads only the manifest, selected CarbonGate archive, and
+its checksum over HTTPS. The packaged installer then:
 
 - verifies the native executable before installation;
 - preserves an existing `carbon.conf`;
@@ -137,6 +137,26 @@ Omit `--setup` or `-Setup` to install without changing host configuration. Use
 | State/config | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
 
 Override state on any platform with `CARBON_HOME`.
+
+Pin a release with `--version 0.3.0` on macOS/Linux or `-Version 0.3.0` on
+Windows. Offline mirrors can override `CARBONGATE_MANIFEST_URL` and
+`CARBONGATE_RELEASE_BASE_URL`; `file://` sources additionally require the
+explicit `CARBONGATE_ALLOW_FILE_URLS=1` opt-in.
+
+### Manual verified fallback
+
+If your environment does not allow a downloaded script to run directly,
+download and inspect the bootstrap first, or download the archive and
+`SHA256SUMS` from the latest Release yourself. After verification and
+extraction, run:
+
+```bash
+./carbongate-VERSION-PLATFORM/install.sh --setup
+```
+
+```powershell
+.\carbongate-VERSION-windows-x64\install.ps1 -Setup
+```
 
 The portable `carbongate-VERSION.tar.gz` and `.zip` JAR archives remain
 available for Java 21 environments, macOS Intel, and enterprise evaluation.

@@ -15,9 +15,12 @@ test -s "$ZIP"
 tar -tzf "$TAR" | grep -F "carbongate-$VERSION/bin/carbongate.jar" >/dev/null
 tar -tzf "$TAR" | grep -F "carbongate-$VERSION/install.sh" >/dev/null
 tar -tzf "$TAR" | grep -F "carbongate-$VERSION/install.ps1" >/dev/null
+tar -tzf "$TAR" | grep -F "carbongate-$VERSION/distribution/release-assets.properties" >/dev/null
+tar -tzf "$TAR" | grep -F "carbongate-$VERSION/ROADMAP.md" >/dev/null
 jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/bin/carbon.cmd" >/dev/null
 jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/README-CN.md" >/dev/null
 jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/skills/carbongate/SKILL.md" >/dev/null
+jar --list --file "$ZIP" | grep -F "carbongate-$VERSION/ROADMAP-CN.md" >/dev/null
 
 INSTALL_PREFIX="$ROOT/build/package-test-prefix"
 CARBON_HOME="$ROOT/build/package-test-home" \

@@ -110,12 +110,13 @@ jobs:
         run: |
           ./scripts/verify.sh
           ./scripts/package.sh "$VERSION_INPUT"
+          tar_asset=$(./scripts/release-asset-name.sh portable.jvm.tar.asset "$VERSION_INPUT")
+          zip_asset=$(./scripts/release-asset-name.sh portable.jvm.zip.asset "$VERSION_INPUT")
           cd build
-          shasum -a 256 "carbongate-$VERSION_INPUT.tar.gz" > "carbongate-$VERSION_INPUT.tar.gz.sha256"
-          shasum -a 256 "carbongate-$VERSION_INPUT.zip" > "carbongate-$VERSION_INPUT.zip.sha256"
+          shasum -a 256 "$tar_asset" > "$tar_asset.sha256"
+          shasum -a 256 "$zip_asset" > "$zip_asset.sha256"
           gh release upload "v$VERSION_INPUT" \
-            "carbongate-$VERSION_INPUT.tar.gz" "carbongate-$VERSION_INPUT.tar.gz.sha256" \
-            "carbongate-$VERSION_INPUT.zip" "carbongate-$VERSION_INPUT.zip.sha256" --clobber
+            "$tar_asset" "$tar_asset.sha256" "$zip_asset" "$zip_asset.sha256" --clobber
 
   publish:
     name: Publish verified release
