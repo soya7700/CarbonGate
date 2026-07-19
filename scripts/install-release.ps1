@@ -103,11 +103,11 @@ try {
     $Installer = Join-Path $Work "$Package\install.ps1"
     if (-not (Test-Path $Installer -PathType Leaf)) { throw "Release archive does not contain install.ps1." }
 
-    $Arguments = @()
-    if ($Prefix) { $Arguments += @("-Prefix", $Prefix) }
-    if ($Setup) { $Arguments += "-Setup" }
-    if ($Hosts) { $Arguments += @("-Hosts", $Hosts) }
-    & $Installer @Arguments
+    $InstallerParameters = @{}
+    if ($Prefix) { $InstallerParameters["Prefix"] = $Prefix }
+    if ($Setup) { $InstallerParameters["Setup"] = $true }
+    if ($Hosts) { $InstallerParameters["Hosts"] = $Hosts }
+    & $Installer @InstallerParameters
     if ($LASTEXITCODE -ne 0) { throw "CarbonGate package installer failed." }
 } finally {
     Remove-Item -Recurse -Force $Work -ErrorAction SilentlyContinue
