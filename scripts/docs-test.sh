@@ -23,6 +23,11 @@ grep -F 'scripts/install-release.sh | sh -s -- --host codex,claude,openclaw' "$R
 grep -F 'scripts/install-release.sh | sh -s -- --host codex,claude,openclaw' "$ROOT/README-CN.md" >/dev/null
 grep -F 'ROADMAP.md' "$ROOT/README.md" >/dev/null
 grep -F 'ROADMAP-CN.md' "$ROOT/README-CN.md" >/dev/null
+grep -F '@carbongate/cli' "$ROOT/README.md" >/dev/null
+grep -F '@carbongate/cli' "$ROOT/README-CN.md" >/dev/null
+grep -F 'docs/npm-adapter.md' "$ROOT/README.md" >/dev/null
+grep -F 'docs/npm-adapter.md' "$ROOT/README-CN.md" >/dev/null
+grep -F 'npm publish --access public --provenance' "$ROOT/docs/npm-adapter.md" >/dev/null
 grep -F '`@carbongate/cli`' "$ROOT/ROADMAP.md" >/dev/null
 grep -F '`@carbongate/cli`' "$ROOT/ROADMAP-CN.md" >/dev/null
 grep -F '`soya7700/homebrew-tap`' "$ROOT/ROADMAP.md" >/dev/null

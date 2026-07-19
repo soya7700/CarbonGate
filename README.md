@@ -19,6 +19,7 @@ independent components that are installed only when needed.
 |---|---|---:|
 | **CarbonGate Core** | Command/MCP policy, approvals, compact logs, CLI, Java and HTTP APIs | Yes |
 | **CarbonGate Skill** | Natural-language installation, inspection, protection, and control in Codex | With Codex setup |
+| **npm Adapter** | Explicit Node.js launcher for a verified native Release | No |
 | **Enterprise Component Host** | Lifecycle, process isolation, health checks, and Guard Pipeline | No |
 | **Pack** | Declarative rules only; never executable | No |
 | **Provider** | DLP inspection, authorization, audit, or enterprise integrations | No |
@@ -54,6 +55,7 @@ Enterprise path
 
 - No Java runtime for a prebuilt native local installation
 - `curl`, `tar`, and `shasum` or `sha256sum` for the macOS/Linux bootstrap
+- Node.js 18.17+ only when using the optional npm adapter
 - JDK 21 (`java`, `javac`, and `jar`) and Git only for source, JVM, or enterprise builds
 - macOS, Linux, or Windows PowerShell 5.1+
 
@@ -112,6 +114,23 @@ Use the CLI immediately in the current terminal:
 ```powershell
 $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 ```
+
+### npm adapter
+
+The optional @carbongate/cli package is published manually only after a
+matching GitHub Release exists. Once it is published, Node.js 18.17+ users can
+use the same verified release route without installing Java:
+
+```bash
+npx @carbongate/cli install
+npx @carbongate/cli setup
+npx @carbongate/cli setup --host codex,claude,openclaw
+```
+
+Installing the npm package performs no download. The explicit install command
+downloads the matching native Release, verifies SHA-256, and invokes its bundled
+installer without changing Agent hosts; setup additionally configures hosts. See
+[the npm adapter contract](docs/npm-adapter.md).
 
 ### Installer behavior
 

@@ -23,7 +23,7 @@ moving optional behavior into Core.
 |---|---|---|---|
 | D0 | Native macOS/Linux/Windows and portable Java 21 releases | Release assets only | Complete in v0.3.0 |
 | D1 | Cross-platform bootstrap and canonical release-asset contract | Shell/PowerShell distribution adapter | Complete in Unreleased |
-| D2 | `@carbongate/cli` | Zero-runtime-dependency npm adapter; explicit `setup`, no network in `postinstall` | Next |
+| D2 | `@carbongate/cli` | Zero-runtime-dependency npm adapter; explicit `setup`, no network in `postinstall` | Complete in Unreleased |
 | D3 | `soya7700/homebrew-tap` | Formula generated from the same release contract and checksums | Planned |
 | D4 | Generic CLI host adapter kit | Small declarative descriptors for Codex, Claude Code, OpenClaw, Qoder, WorkBuddy, Coze, and compatible MCP hosts | Planned |
 | E1 | Pack authoring kit and validation | Declarative rules only; no executable Pack code | Planned |

@@ -12,6 +12,9 @@ All notable changes to CarbonGate are documented here. Version numbers follow
 - Explicit offline mirror support and cross-platform distribution tests.
 - English and Chinese lightweight delivery roadmaps for npm, Homebrew, host adapters,
   and optional enterprise components.
+- Dependency-free @carbongate/cli source package with explicit SHA-256-verified
+  native Release setup, offline-mirror opt-in, package-content tests, and manual
+  publication guidance.
 
 ## [0.3.0] - 2026-07-18
 
