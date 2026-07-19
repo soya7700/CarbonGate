@@ -39,6 +39,9 @@ jobs:
       - name: Run complete verification
         run: ./scripts/verify.sh
 
+      - name: Verify npm adapter
+        run: ./scripts/npm-test.sh
+
   verify-windows:
     name: JDK 21 Windows source and package installers
     runs-on: windows-2022
@@ -109,6 +112,10 @@ jobs:
       - name: Verify Windows release bootstrap
         shell: pwsh
         run: .\scripts\distribution-test.ps1
+
+      - name: Verify npm adapter
+        shell: pwsh
+        run: .\scripts\npm-test.ps1
 
   verify-native:
     name: Native CLI verification (${{ matrix.platform }})

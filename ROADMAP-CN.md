@@ -21,7 +21,7 @@ CarbonGate 是一个轻量安全骨干，安装适配器和企业组件全部按
 |---|---|---|---|
 | D0 | macOS/Linux/Windows 原生包与 Java 21 便携包 | 仅 Release 资产 | v0.3.0 已完成 |
 | D1 | 跨平台引导安装器和统一 Release 资产契约 | Shell/PowerShell 分发适配层 | Unreleased 已完成 |
-| D2 | `@carbongate/cli` | 零运行时依赖 npm 适配器；显式 `setup`，`postinstall` 不联网 | 下一阶段 |
+| D2 | `@carbongate/cli` | 零运行时依赖 npm 适配器；显式 `setup`，`postinstall` 不联网 | Unreleased 已完成 |
 | D3 | `soya7700/homebrew-tap` | 根据同一契约和校验值生成 Formula | 已规划 |
 | D4 | 通用 CLI 宿主适配套件 | 面向 Codex、Claude Code、OpenClaw、Qoder、WorkBuddy、扣子和兼容 MCP 宿主的声明式描述符 | 已规划 |
 | E1 | Pack 编写与校验工具 | 只允许声明式规则，不执行 Pack 代码 | 已规划 |

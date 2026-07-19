@@ -1,0 +1,45 @@
+{
+  "name": "@carbongate/cli",
+  "version": "0.3.0",
+  "description": "Verified npm installer adapter for CarbonGate native releases",
+  "license": "Apache-2.0",
+  "author": "CarbonGate contributors",
+  "type": "module",
+  "bin": {
+    "carbongate": "bin/carbongate.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "distribution",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soya7700/CarbonGate.git",
+    "directory": "adapters/npm/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/soya7700/CarbonGate/issues"
+  },
+  "homepage": "https://github.com/soya7700/CarbonGate#readme",
+  "keywords": [
+    "ai-agent",
+    "mcp",
+    "security",
+    "zero-trust",
+    "carbongate"
+  ]
+}

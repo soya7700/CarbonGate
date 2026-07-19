@@ -18,6 +18,7 @@ CarbonGate 在命令或 MCP Tool Call 执行前进行评估，限制文件和网
 |---|---|---:|
 | **CarbonGate Core** | 命令/MCP 策略、授权、精简日志、CLI、Java 与 HTTP API | 是 |
 | **CarbonGate Skill** | 在 Codex 中通过自然语言安装、查询、保护和控制 | Codex 接入时 |
+| **npm Adapter** | 用于校验原生 Release 的显式 Node.js 启动适配器 | 否 |
 | **Enterprise Component Host** | 组件生命周期、进程隔离、健康检查与 Guard Pipeline | 否 |
 | **Pack** | 纯声明式规则，永不执行代码 | 否 |
 | **Provider** | DLP 检查、审批、审计或企业系统集成 | 否 |
@@ -52,6 +53,7 @@ CarbonGate 在命令或 MCP Tool Call 执行前进行评估，限制文件和网
 
 - 预构建原生本地安装不需要 Java 运行时
 - macOS/Linux 引导安装需要 `curl`、`tar` 以及 `shasum` 或 `sha256sum`
+- 仅可选 npm 适配器需要 Node.js 18.17+
 - 只有源码、JVM 或企业组件构建需要 JDK 21（`java`、`javac`、`jar`）和 Git
 - macOS、Linux 或 Windows PowerShell 5.1+
 
@@ -108,6 +110,22 @@ export PATH="$HOME/.local/bin:$PATH"
 ```powershell
 $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 ```
+
+### npm 适配器
+
+可选的 @carbongate/cli 只会在存在匹配 GitHub Release 后由维护者手动发布。
+发布完成后，Node.js 18.17+ 用户可在不安装 Java 的情况下使用同一条校验 Release
+安装路径：
+
+```bash
+npx @carbongate/cli install
+npx @carbongate/cli setup
+npx @carbongate/cli setup --host codex,claude,openclaw
+```
+
+安装 npm 包本身不会下载任何内容；显式执行 install 才会下载匹配的原生 Release、
+校验 SHA-256，并调用其内置安装器，且不修改 Agent 宿主；setup 才额外配置宿主。
+详见 [npm 适配器契约](docs/npm-adapter.md)。
 
 ### 安装器行为
 
