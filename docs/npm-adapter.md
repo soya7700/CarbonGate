@@ -35,6 +35,13 @@ CARBONGATE_ALLOW_FILE_URLS=1 opt-in. CARBONGATE_VERSION provides a default
 version and CARBONGATE_LATEST_URL can point to a controlled latest-release
 response using the same protocol rules.
 
+When the default unauthenticated GitHub API lookup is rate-limited, the adapter
+does not ask for a token. It resolves the public `https://github.com/OWNER/REPO/releases/latest`
+redirect instead, validates that the redirect remains within the manifest's
+repository and has a semantic-version tag, then verifies the selected release
+archive with its published SHA-256 file. A fixed `--version` always bypasses
+latest-release resolution entirely.
+
 ## Maintainer contract
 
 The package source is adapters/npm/cli. Its version must match the repository

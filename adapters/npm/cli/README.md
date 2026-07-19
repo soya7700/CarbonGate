@@ -46,7 +46,10 @@ platforms should use CarbonGate's portable Java 21 archive.
   `CARBONGATE_RELEASE_BASE_URL` to select that mirror.
 
 `CARBONGATE_VERSION` supplies a default release version. If no version is set,
-the adapter asks the official GitHub Releases API for the latest version.
+the adapter asks the GitHub Releases API for the latest version. If that
+unauthenticated API request is rate-limited, it resolves GitHub's public
+`releases/latest` redirect instead; no GitHub token is required. A fixed
+`--version` bypasses latest-release resolution entirely.
 
 ## Maintainer publication
 
