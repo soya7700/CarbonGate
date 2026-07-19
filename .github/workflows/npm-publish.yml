@@ -66,7 +66,8 @@ jobs:
         run: npm --prefix adapters/npm/cli test
 
       - name: Review package contents
-        run: npm --prefix adapters/npm/cli pack --dry-run --json --ignore-scripts
+        working-directory: adapters/npm/cli
+        run: npm pack --dry-run --json --ignore-scripts
 
       - name: Publish through npm trusted publishing
         working-directory: adapters/npm/cli
