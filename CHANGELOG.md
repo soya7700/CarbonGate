@@ -5,6 +5,8 @@ All notable changes to CarbonGate are documented here. Version numbers follow
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-19
+
 ### Added
 
 - Canonical, data-only release asset contract shared by future distribution adapters.

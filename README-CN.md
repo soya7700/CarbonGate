@@ -151,7 +151,7 @@ npx @carbongate/cli setup --host codex,claude,openclaw
 
 所有平台都可用 `CARBON_HOME` 覆盖状态目录。
 
-macOS/Linux 可用 `--version 0.3.0` 固定版本，Windows 使用 `-Version 0.3.0`。
+macOS/Linux 可用 `--version 0.3.1` 固定版本，Windows 使用 `-Version 0.3.1`。
 离线镜像可覆盖 `CARBONGATE_MANIFEST_URL` 和
 `CARBONGATE_RELEASE_BASE_URL`；如使用 `file://`，还必须显式设置
 `CARBONGATE_ALLOW_FILE_URLS=1`。
