@@ -24,6 +24,7 @@ javac --release 21 -Xlint:all -Werror -encoding UTF-8 -cp "$LINT_OUT/classes" \
 
 "$ROOT/scripts/test.sh"
 "$ROOT/scripts/docs-test.sh"
+"$ROOT/scripts/distribution-test.sh"
 "$ROOT/scripts/build.sh"
 "$ROOT/scripts/enterprise-test.sh"
 "$ROOT/scripts/provider-test.sh"

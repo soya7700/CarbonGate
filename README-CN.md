@@ -24,7 +24,7 @@ CarbonGate 在命令或 MCP Tool Call 执行前进行评估，限制文件和网
 | **Sandbox** | 基于容器的命令隔离 | 否 |
 
 企业代码不会进入 Core JAR，详见
-[轻量化架构边界](docs/architecture.md)。
+[轻量化架构边界](docs/architecture.md)和[迭代路线图](ROADMAP-CN.md)。
 
 ```text
 本地 Agent 路径
@@ -51,6 +51,7 @@ CarbonGate 在命令或 MCP Tool Call 执行前进行评估，限制文件和网
 ## 环境要求
 
 - 预构建原生本地安装不需要 Java 运行时
+- macOS/Linux 引导安装需要 `curl`、`tar` 以及 `shasum` 或 `sha256sum`
 - 只有源码、JVM 或企业组件构建需要 JDK 21（`java`、`javac`、`jar`）和 Git
 - macOS、Linux 或 Windows PowerShell 5.1+
 
@@ -63,23 +64,23 @@ Core 和第一方组件不依赖第三方源码或运行时库。Container Sandb
 
 ## 1. 推荐：一键安装
 
-从 [GitHub 最新 Release](https://github.com/soya7700/CarbonGate/releases/latest)
-下载与平台匹配的原生安装包。安装包包含自带运行能力的 `carbon`、配置、Skill、
-文档、校验文件和开源许可声明，不要求用户安装 Java。
+引导安装器会从
+[GitHub 最新 Release](https://github.com/soya7700/CarbonGate/releases/latest)
+选择与平台匹配的原生包，校验公开的 SHA-256 后运行包内安装器。不要求 Java，
+也不会启动后台服务。
 
 ### macOS 和 Linux
 
-Apple Silicon 下载 `carbongate-VERSION-darwin-arm64.tar.gz`，x64 Linux 下载
-`carbongate-VERSION-linux-x64.tar.gz`，根据 `SHA256SUMS` 校验并解压后运行：
+Apple Silicon macOS 和 x64 Linux：
 
 ```bash
-./carbongate-VERSION-PLATFORM/install.sh --setup
+curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.sh | sh -s -- --setup
 ```
 
 只配置指定宿主：
 
 ```bash
-./carbongate-VERSION-PLATFORM/install.sh --host codex,claude,openclaw
+curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.sh | sh -s -- --host codex,claude,openclaw
 ```
 
 默认命令为 `~/.local/bin/carbon`。当前终端找不到时：
@@ -90,17 +91,16 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ### Windows
 
-下载 `carbongate-VERSION-windows-x64.zip`，根据 `SHA256SUMS` 校验并解压，
-打开 PowerShell 后运行：
+在 x64 Windows 打开 PowerShell：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\carbongate-VERSION-windows-x64\install.ps1 -Setup
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.ps1'))) -Setup
 ```
 
 只配置指定宿主：
 
 ```powershell
-.\carbongate-VERSION-windows-x64\install.ps1 -Hosts "codex,claude,openclaw"
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.ps1'))) -Hosts "codex,claude,openclaw"
 ```
 
 在当前终端立即使用：
@@ -111,7 +111,8 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 
 ### 安装器行为
 
-安装器会：
+引导安装器只通过 HTTPS 下载清单、选中的 CarbonGate 安装包和对应校验文件。
+包内安装器随后会：
 
 - 安装前验证原生可执行文件；
 - 保留已有 `carbon.conf`；
@@ -131,6 +132,24 @@ $env:Path = "$env:LOCALAPPDATA\CarbonGate\bin;$env:Path"
 | 状态/配置 | `~/.carbongate/` | `%USERPROFILE%\.carbongate\` |
 
 所有平台都可用 `CARBON_HOME` 覆盖状态目录。
+
+macOS/Linux 可用 `--version 0.3.0` 固定版本，Windows 使用 `-Version 0.3.0`。
+离线镜像可覆盖 `CARBONGATE_MANIFEST_URL` 和
+`CARBONGATE_RELEASE_BASE_URL`；如使用 `file://`，还必须显式设置
+`CARBONGATE_ALLOW_FILE_URLS=1`。
+
+### 手动校验次选方式
+
+如果环境不允许直接执行下载的脚本，可先下载并审阅引导安装器；也可以从最新
+Release 手动下载安装包和 `SHA256SUMS`。完成校验和解压后运行：
+
+```bash
+./carbongate-VERSION-PLATFORM/install.sh --setup
+```
+
+```powershell
+.\carbongate-VERSION-windows-x64\install.ps1 -Setup
+```
 
 Release 同时保留 `carbongate-VERSION.tar.gz` 和 `.zip` 便携 JAR 包，供已有
 Java 21 环境、macOS Intel 和企业评估使用。

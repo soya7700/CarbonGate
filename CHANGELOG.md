@@ -3,6 +3,16 @@
 All notable changes to CarbonGate are documented here. Version numbers follow
 [Semantic Versioning](https://semver.org/), and Git tags use the `vX.Y.Z` form.
 
+## [Unreleased]
+
+### Added
+
+- Canonical, data-only release asset contract shared by future distribution adapters.
+- SHA-256-verifying one-command bootstrap installers for macOS, Linux, and Windows.
+- Explicit offline mirror support and cross-platform distribution tests.
+- English and Chinese lightweight delivery roadmaps for npm, Homebrew, host adapters,
+  and optional enterprise components.
+
 ## [0.3.0] - 2026-07-18
 
 ### Added

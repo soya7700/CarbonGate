@@ -106,6 +106,10 @@ jobs:
           $mode = & (Join-Path $prefix "bin\carbon.cmd") mode show
           if ($mode -notmatch '"mode":"warn"') { throw "Package reinstall overwrote carbon.conf" }
 
+      - name: Verify Windows release bootstrap
+        shell: pwsh
+        run: .\scripts\distribution-test.ps1
+
   verify-native:
     name: Native CLI verification (${{ matrix.platform }})
     strategy:
