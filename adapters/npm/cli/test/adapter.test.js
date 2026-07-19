@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseManifest, parseSetupOptions, supportedPlatform } from "../lib/adapter.js";
+import { parseManifest, parseSetupOptions, supportedPlatform, testing } from "../lib/adapter.js";
 
 const packageDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryRoot = path.resolve(packageDirectory, "../../..");
@@ -38,6 +38,17 @@ test("manifest and platform validation reject unsupported inputs", () => {
   assert.throws(() => supportedPlatform("darwin", "x64"), /portable Java 21 archive/);
   assert.throws(() => parseManifest("schema.version=1\nrepository=owner/repo\nrepository=duplicate\n"), /malformed/);
   assert.throws(() => parseSetupOptions(["--version", "not-a-version"], {}), /invalid/);
+});
+
+test("GitHub rate-limit fallback only accepts the expected public release redirect", () => {
+  assert.equal(testing.versionFromGitHubReleaseRedirect("soya7700/CarbonGate",
+    "https://github.com/soya7700/CarbonGate/releases/tag/v0.3.0"), "0.3.0");
+  assert.throws(() => testing.versionFromGitHubReleaseRedirect("soya7700/CarbonGate",
+    "https://github.com/other/repository/releases/tag/v0.3.0"), /expected repository/);
+  assert.throws(() => testing.versionFromGitHubReleaseRedirect("soya7700/CarbonGate",
+    "https://example.invalid/soya7700/CarbonGate/releases/tag/v0.3.0"), /expected repository/);
+  assert.equal(testing.isGitHubRateLimit({ statusCode: 403, headers: { "x-ratelimit-remaining": "0" } }), true);
+  assert.equal(testing.isGitHubRateLimit({ statusCode: 403, headers: { "x-ratelimit-remaining": "1" } }), false);
 });
 
 test("setup verifies a fixture release and delegates to its packaged installer", async () => {

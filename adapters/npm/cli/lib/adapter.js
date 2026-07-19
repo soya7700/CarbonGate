@@ -11,6 +11,8 @@ const MANIFEST_PATH = path.join(PACKAGE_DIRECTORY, "distribution", "release-asse
 const PACKAGE_JSON_PATH = path.join(PACKAGE_DIRECTORY, "package.json");
 const MAX_DOWNLOAD_BYTES = 256 * 1024 * 1024;
 const VERSION_PATTERN = /^[0-9]+\.[0-9]+\.[0-9]+(?:[+-][A-Za-z0-9.-]+)?$/;
+const GITHUB_API_ORIGIN = "https://api.github.com";
+const GITHUB_WEB_ORIGIN = "https://github.com";
 
 export async function main(argv, environment = process.env) {
   const command = argv[0] ?? "help";
@@ -160,15 +162,53 @@ function expandAsset(pattern, version) {
 }
 
 async function latestVersion(repository, environment) {
-  const source = environment.CARBONGATE_LATEST_URL
-    ?? `https://api.github.com/repos/${repository}/releases/latest`;
-  const payload = JSON.parse((await readResource(source, environment)).toString("utf8"));
+  const defaultSource = `${GITHUB_API_ORIGIN}/repos/${repository}/releases/latest`;
+  const source = environment.CARBONGATE_LATEST_URL ?? defaultSource;
+  try {
+    return parseLatestReleasePayload(await readResource(source, environment));
+  } catch (error) {
+    if (source !== defaultSource || !isGitHubRateLimit(error)) {
+      throw error;
+    }
+    return latestVersionFromGitHubRedirect(repository);
+  }
+}
+
+function parseLatestReleasePayload(resource) {
+  const payload = JSON.parse(resource.toString("utf8"));
   const tag = String(payload.tag_name ?? "");
   const version = tag.startsWith("v") ? tag.slice(1) : tag;
   if (!VERSION_PATTERN.test(version)) {
     throw new Error("latest CarbonGate release response has no valid semantic version");
   }
   return version;
+}
+
+async function latestVersionFromGitHubRedirect(repository) {
+  const destination = await readRedirectTarget(`${GITHUB_WEB_ORIGIN}/${repository}/releases/latest`);
+  return versionFromGitHubReleaseRedirect(repository, destination);
+}
+
+function versionFromGitHubReleaseRedirect(repository, destination) {
+  const url = new URL(destination);
+  const prefix = `/${repository}/releases/tag/`;
+  if (url.origin !== GITHUB_WEB_ORIGIN || !url.pathname.startsWith(prefix)) {
+    throw new Error("GitHub latest-release redirect did not resolve to the expected repository");
+  }
+  const tag = decodeURIComponent(url.pathname.slice(prefix.length));
+  if (!tag || tag.includes("/")) {
+    throw new Error("GitHub latest-release redirect has an unsafe tag");
+  }
+  const version = tag.startsWith("v") ? tag.slice(1) : tag;
+  if (!VERSION_PATTERN.test(version)) {
+    throw new Error("GitHub latest-release redirect has no valid semantic version");
+  }
+  return version;
+}
+
+function isGitHubRateLimit(error) {
+  return error?.statusCode === 403
+    && error.headers?.["x-ratelimit-remaining"] === "0";
 }
 
 function releaseAssetUrl(base, version, asset) {
@@ -205,7 +245,7 @@ async function readResource(resource, environment, redirects = 0) {
       }
       if (status < 200 || status >= 300) {
         response.resume();
-        reject(new Error(`download failed with HTTP ${status}: ${url}`));
+        reject(new HttpStatusError(status, response.headers, `download failed with HTTP ${status}: ${url}`));
         return;
       }
       const chunks = [];
@@ -222,6 +262,36 @@ async function readResource(resource, environment, redirects = 0) {
     });
     request.on("error", reject);
   });
+}
+
+async function readRedirectTarget(resource) {
+  const url = new URL(resource);
+  if (url.protocol !== "https:") {
+    throw new Error(`refusing non-HTTPS latest-release redirect: ${resource}`);
+  }
+  return new Promise((resolve, reject) => {
+    const request = https.get(url, { headers: { "user-agent": "CarbonGate-npm-adapter" } }, (response) => {
+      const status = response.statusCode ?? 0;
+      if (status >= 300 && status < 400 && response.headers.location) {
+        response.resume();
+        resolve(new URL(response.headers.location, url).toString());
+        return;
+      }
+      response.resume();
+      reject(new HttpStatusError(status, response.headers,
+        `latest-release redirect failed with HTTP ${status}: ${url}`));
+    });
+    request.on("error", reject);
+  });
+}
+
+class HttpStatusError extends Error {
+  constructor(statusCode, headers, message) {
+    super(message);
+    this.name = "HttpStatusError";
+    this.statusCode = statusCode;
+    this.headers = headers;
+  }
 }
 
 async function verifyChecksum(archivePath, checksumPath, asset) {
@@ -326,4 +396,10 @@ function runCapture(program, argumentsList) {
   });
 }
 
-export const testing = { expandAsset, releaseAssetUrl, verifyChecksum };
+export const testing = {
+  expandAsset,
+  isGitHubRateLimit,
+  releaseAssetUrl,
+  verifyChecksum,
+  versionFromGitHubReleaseRedirect
+};

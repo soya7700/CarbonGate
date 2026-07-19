@@ -16,6 +16,12 @@ All notable changes to CarbonGate are documented here. Version numbers follow
   native Release setup, offline-mirror opt-in, package-content tests, and manual
   publication guidance.
 
+### Fixed
+
+- npm latest-release resolution now falls back to GitHub's public verified
+  release redirect when the unauthenticated GitHub API rate limit is exhausted;
+  no user token is required.
+
 ## [0.3.0] - 2026-07-18
 
 ### Added
