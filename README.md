@@ -89,7 +89,9 @@ Configure only selected hosts:
 curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.sh | sh -s -- --host codex,claude,openclaw
 ```
 
-The default CLI is `~/.local/bin/carbon`. If needed in the current shell:
+The installer adds `~/.local/bin` to the detected shell's startup file for new
+terminals. A child installer cannot change the current shell, so activate it
+once immediately with:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -144,6 +146,7 @@ its checksum over HTTPS. The packaged installer then:
 - verifies new registrations and rolls them back on failure;
 - installs the bundled CarbonGate Skill for Codex without replacing an
   existing same-name Skill;
+- adds the default CLI directory to the user's shell PATH for future terminals;
 - downloads no dependency and starts no background service.
 
 Omit `--setup` or `-Setup` to install without changing host configuration. Use

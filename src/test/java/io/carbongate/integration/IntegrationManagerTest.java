@@ -69,6 +69,10 @@ public final class IntegrationManagerTest {
                 Map.of("PATH", "", "CODEX_CLI_PATH", desktopCodex.toString()));
         assert desktopRunner.available("codex");
         assert desktopRunner.resolveExecutable("codex").equals(desktopCodex);
+
+        Path nativeCarbon = Files.createTempFile("carbon-native-invocation-", ".bin");
+        assert IntegrationInvocation.nativeInvocation(nativeCarbon, List.of("mcp", "serve"))
+                .equals(List.of(nativeCarbon.toAbsolutePath().normalize().toString(), "mcp", "serve"));
     }
 
     private static final class FakeRunner implements CommandRunner {

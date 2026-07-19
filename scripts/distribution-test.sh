@@ -68,6 +68,18 @@ CARBONGATE_RELEASE_BASE_URL="file://$TEST_ROOT/releases/download" \
 test -x "$PREFIX/bin/carbon"
 "$PREFIX/bin/carbon" version | grep -F 'CarbonGate fixture' >/dev/null
 
+DEFAULT_HOME="$TEST_ROOT/default-home"
+CARBON_HOME="$TEST_ROOT/default-carbon-home" \
+HOME="$DEFAULT_HOME" \
+SHELL=/bin/zsh \
+CARBONGATE_ALLOW_FILE_URLS=1 \
+CARBONGATE_MANIFEST_URL="file://$MANIFEST" \
+CARBONGATE_RELEASE_BASE_URL="file://$TEST_ROOT/releases/download" \
+  "$ROOT/scripts/install-release.sh" --version "$VERSION" >/dev/null
+test -x "$DEFAULT_HOME/.local/bin/carbon"
+grep -F '# CarbonGate CLI' "$DEFAULT_HOME/.zshrc" >/dev/null
+grep -F 'export PATH="$HOME/.local/bin:$PATH"' "$DEFAULT_HOME/.zshrc" >/dev/null
+
 printf '%064d  %s\n' 0 "$ASSET" > "$RELEASE/$ASSET.sha256"
 if CARBON_HOME="$TEST_ROOT/rejected-home" \
   CARBONGATE_ALLOW_FILE_URLS=1 \

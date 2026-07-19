@@ -85,7 +85,8 @@ curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/in
 curl -fsSL https://raw.githubusercontent.com/soya7700/CarbonGate/main/scripts/install-release.sh | sh -s -- --host codex,claude,openclaw
 ```
 
-默认命令为 `~/.local/bin/carbon`。当前终端找不到时：
+安装器会把 `~/.local/bin` 写入检测到的 Shell 启动文件，使新终端自动可用。
+子进程不能修改当前终端的环境，因此当前终端需执行一次：
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
@@ -138,6 +139,7 @@ npx @carbongate/cli setup --host codex,claude,openclaw
 - 不覆盖不属于 CarbonGate 的同名 `carbongate` 配置；
 - 验证新注册，失败时自动回滚；
 - Codex 接入时安装内置 CarbonGate Skill，但不替换已有同名 Skill；
+- 将默认 CLI 目录加入用户 Shell 的 PATH，供新终端自动使用；
 - 不下载依赖，不启动后台服务。
 
 省略 `--setup` 或 `-Setup` 可仅安装而不修改宿主。使用 `--prefix PATH` 或
