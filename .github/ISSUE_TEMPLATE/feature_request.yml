@@ -1,0 +1,37 @@
+name: Feature request
+description: Propose a focused improvement to CarbonGate.
+title: "feature: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, please check whether the idea belongs in the
+        lightweight Core, an optional Pack, Provider, Sandbox, or host Skill.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user or security problem, not only a solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Explain the smallest useful change and its expected security impact.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety and modularity
+      options:
+        - label: This request does not require sharing credentials, personal data, or customer data.
+          required: true
+        - label: I considered whether this should be an optional module rather than Core.
+          required: true

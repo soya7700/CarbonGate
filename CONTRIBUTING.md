@@ -34,6 +34,12 @@ When Native Image is available, also run:
 Do not include credentials, personal data, customer data, generated binaries,
 or copied code without documented provenance and a compatible license.
 
+## Community standards and support
+
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) in every project space.
+For usage questions, start with [SUPPORT.md](SUPPORT.md); suspected security
+issues must be reported through [SECURITY.md](SECURITY.md), not public issues.
+
 ## Releases
 
 Maintainers use semantic versions from `VERSION`. A release candidate must be
