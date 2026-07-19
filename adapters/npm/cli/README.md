@@ -24,6 +24,14 @@ Select specific local Agent hosts:
 npx @carbongate/cli setup --host codex,claude,openclaw
 ```
 
+On macOS and Linux, the verified installer adds its default `~/.local/bin`
+directory to the detected shell's startup file. Open a new terminal after
+installation, or activate the current one once with:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 Pin the CarbonGate Release or installation destination:
 
 ```bash

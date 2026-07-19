@@ -1,5 +1,6 @@
 package io.carbongate.integration;
 
+import io.carbongate.BuildInfo;
 import io.carbongate.cli.CarbonCli;
 
 import java.net.URISyntaxException;
@@ -21,6 +22,10 @@ public final class IntegrationInvocation {
         if (configured != null && !configured.isBlank()) {
             return append(List.of(configured), suffix);
         }
+        if (BuildInfo.nativeImage()) {
+            Path nativeExecutable = runningExecutable();
+            if (nativeExecutable != null) return nativeInvocation(nativeExecutable, suffix);
+        }
         try {
             Path location = Path.of(CarbonCli.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             if (Files.isRegularFile(location) && location.getFileName().toString().endsWith(".jar")) {
@@ -30,6 +35,11 @@ public final class IntegrationInvocation {
             // Development classpaths fall back to the installed launcher.
         }
         return append(List.of(windows() ? "carbon.cmd" : "carbon"), suffix);
+    }
+
+    static List<String> nativeInvocation(Path executable, List<String> suffix) {
+        if (!Files.isRegularFile(executable)) throw new IllegalArgumentException("Native CarbonGate executable is missing");
+        return append(List.of(executable.toAbsolutePath().normalize().toString()), suffix);
     }
 
     private static List<String> append(List<String> prefix, List<String> suffix) {
@@ -43,6 +53,13 @@ public final class IntegrationInvocation {
         String name = windows() ? "java.exe" : "java";
         Path bundled = Path.of(System.getProperty("java.home"), "bin", name);
         return Files.isRegularFile(bundled) ? bundled.toString() : name;
+    }
+
+    private static Path runningExecutable() {
+        return ProcessHandle.current().info().command()
+                .map(Path::of)
+                .filter(Files::isRegularFile)
+                .orElse(null);
     }
 
     private static boolean windows() {

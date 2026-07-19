@@ -39,4 +39,10 @@ if ($Setup -or $Hosts) {
 }
 
 Write-Host "Installed CarbonGate to $Launcher"
-Write-Host "Add $BinDirectory to your user PATH, then open a new terminal."
+$UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$PathEntries = @($UserPath -split ";" | Where-Object { $_ })
+if (-not ($PathEntries | Where-Object { $_ -ieq $BinDirectory })) {
+    [Environment]::SetEnvironmentVariable("Path", (($PathEntries + $BinDirectory) -join ";"), "User")
+    Write-Host "Added $BinDirectory to your user PATH."
+}
+Write-Host "Open a new terminal, then run: carbon doctor"

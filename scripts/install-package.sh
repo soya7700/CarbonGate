@@ -83,7 +83,31 @@ if test "$SETUP" = true; then
 fi
 
 printf 'Installed CarbonGate to %s\n' "$LAUNCHER"
-case ":$PATH:" in
-  *":$PREFIX/bin:"*) ;;
-  *) printf 'Add %s/bin to PATH.\n' "$PREFIX" ;;
-esac
+configure_path() {
+  BIN_DIRECTORY=$1
+  case ":$PATH:" in
+    *":$BIN_DIRECTORY:"*) return ;;
+  esac
+  if test "$PREFIX" != "$HOME/.local"; then
+    printf 'To use CarbonGate now: export PATH="%s:$PATH"\n' "$BIN_DIRECTORY"
+    return
+  fi
+  SHELL_NAME=${SHELL:-}
+  case "${SHELL_NAME##*/}" in
+    zsh) STARTUP_FILE=$HOME/.zshrc; PATH_LINE='export PATH="$HOME/.local/bin:$PATH"' ;;
+    bash) STARTUP_FILE=$HOME/.bashrc; PATH_LINE='export PATH="$HOME/.local/bin:$PATH"' ;;
+    fish) STARTUP_FILE=$HOME/.config/fish/conf.d/carbongate.fish; PATH_LINE='fish_add_path -g $HOME/.local/bin' ;;
+    *) STARTUP_FILE=$HOME/.profile; PATH_LINE='export PATH="$HOME/.local/bin:$PATH"' ;;
+  esac
+  if ! test -f "$STARTUP_FILE" || ! grep -F '# CarbonGate CLI' "$STARTUP_FILE" >/dev/null 2>&1; then
+    mkdir -p "$(dirname -- "$STARTUP_FILE")"
+    {
+      printf '\n# CarbonGate CLI\n'
+      printf '%s\n' "$PATH_LINE"
+    } >> "$STARTUP_FILE"
+    printf 'Added CarbonGate to PATH for new terminals via %s\n' "$STARTUP_FILE"
+  fi
+  printf 'To use CarbonGate now: export PATH="%s:$PATH"\n' "$BIN_DIRECTORY"
+}
+
+configure_path "$PREFIX/bin"
